@@ -291,7 +291,7 @@ class Mouse:
         paths = list()
 
         for i in range(iter):
-            print(f"Iteration {i}")
+            print(f"Iteration {i}", end="\r")
             if plot and i % plot_inter == 0:
                 landscapes.append(self.eval_value_landscape(plot_locs))
 
