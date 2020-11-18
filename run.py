@@ -7,8 +7,9 @@ from Agent import Mouse
 
 
 # set up simulation, connect networks
+env = Maze()
+
 with nengo.Network() as model:
-    env = Maze()
     agent = Mouse(env, 23, 23, act_lr=0.01, crit_lr=0.01)
 
     # TODO add error node
