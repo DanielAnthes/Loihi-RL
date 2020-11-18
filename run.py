@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import nengo
 
 from Environment import Maze
@@ -35,6 +36,10 @@ with nengo.Network() as model:
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
     nengo.Connection(agent.Error.net.errornode, agent.Critic.net.conn.learning_rule)
 
+    # add Probes
+    errorprobe = nengo.Probe(agent.Error.net.errornode)
+    envprobe = nengo.Probe(envstate)
+
 if BACKEND == 'CPU':
     sim = nengo.Simulator(model)
 
@@ -53,4 +58,13 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-    sim.run(10)
+    sim.run(2)
+
+plt.figure()
+plt.subplot(211)
+plt.plot(sim.trange(), sim.data[errorprobe])
+plt.title("Error Signal")
+plt.subplot(212)
+plt.plot(sim.trange(), sim.data[envprobe][:,:-1])
+plt.legend(["xloc", "yloc", "reward", "done"])
+plt.show()
