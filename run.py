@@ -3,7 +3,7 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
-BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+BACKEND = 'LOIHI' # choice of CPU, GPU and LOIHI
 
 
 
@@ -33,9 +33,16 @@ with nengo.Network() as model:
 
 if BACKEND == 'CPU':
     sim = nengo.Simulator(model)
+
 elif BACKEND == 'GPU':
     import nengo_ocl
-    sim = nengo_ocl.Simulator(model)
+    import pyopencl as cl
+    # set device to avoid being prompted every time
+    platform = cl.get_platforms()
+    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
+    ctx = cl.Context(devices=my_gpu_devices)
+    sim = nengo_ocl.Simulator(model, context=ctx)
+
 elif BACKEND == 'LOIHI':
     import nengo_loihi
     sim = nengo_loihi.Simulator(model)

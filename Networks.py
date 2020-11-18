@@ -77,11 +77,11 @@ class DecisionNode:
         RETURNS:
             decision    -   integer index of choice made
         '''
-        activation_in += 1 # ensure positive activations TODO: ugly hack, this will probably cause problems later
+        pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: ugly hack, this will probably cause problems later
         if np.sum(activation_in) == 0: # avoid division by zero
             decision = choice(self.actions)
         else:
-            probs = activation_in / np.sum(activation_in)
+            probs = pos_activation / np.sum(pos_activation)
             decision = choice(self.actions, p=probs)
         return decision
 
