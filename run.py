@@ -3,6 +3,7 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 
 
 
@@ -29,5 +30,16 @@ with nengo.Network() as model:
     # execute action in environment
     nengo.Connection(agent.DecisionMaker.net.choicenode, envstate)
 
-with nengo.Simulator(model) as sim:
+
+if BACKEND == 'CPU':
+    sim = nengo.Simulator(model)
+elif BACKEND == 'GPU':
+    import nengo_ocl
+    sim = nengo_ocl.Simulator(model)
+elif BACKEND == 'LOIHI':
+    import nengo_loihi
+    sim = nengo_loihi.Simulator(model)
+
+
+with sim:
     sim.run(10)

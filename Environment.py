@@ -53,7 +53,7 @@ class Maze:
         # print(f"RECEIVED ACTION: {action}")
         self.time += self.timestep
         if self.done: # check whether simulation has ended
-            print("mouse has reached the platform, resetting")
+            # print("mouse has reached the platform, resetting")
             self.reset(self.starting_pos[np.random.choice(4),:]) # random starting position north, south, east, or west
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
