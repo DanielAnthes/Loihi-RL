@@ -1,6 +1,7 @@
 import nengo
 import numpy as np
 from numpy.random import choice, random
+import Learning
 
 class ActorNet:
     '''
@@ -10,7 +11,7 @@ class ActorNet:
     def __init__(self, n_pc, n_neuron_in, n_neuron_out):
         '''
         Initialize actor net as a nengo network object
-        
+
             PARAMS:
                 n_pc            -   number of place cells
                 n_neuron_in     -   number of neurons in Ensemble encoding input
@@ -19,7 +20,10 @@ class ActorNet:
         with nengo.Network() as net:
             net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
-            net.conn = nengo.Connection(net.input, net.output, function=lambda x: random(8))    # TODO: add learning here, 
+            net.conn = nengo.Connection(net.input, net.output,
+                                        function=lambda x: random(8),
+                                        solver=nengo.solvers.LstsqL2(weights=True),
+                                        learning_rule_type=Learning.TDL(learning_rate=1e-6))    # TODO write the actual TDL rule, not Oja
                                                                                                 # TODO if something goes wrong here take a good long look at the initial connection function
         self.net = net
 
@@ -59,7 +63,7 @@ class ErrorNode:
     on receiving the reward and new prediction V_t+1 computes delta as:
 
         delta = Reward + discount*V_t+1 - V_t
-    
+
     Probably, this will cause the error signal to be delayed and applied at the wrong time.
     TODO check whether this still works or is complete nonsense
     '''
@@ -89,7 +93,7 @@ class DecisionNode:
     Takes as input a vector of neural activities and
     stochastically makes a choice for an action with probability proportional
     to the relative activations of the neural input
-    '''    
+    '''
     def __init__(self, actions):
         '''
         INPUTS:
@@ -133,7 +137,7 @@ class PlaceCells:
         alternatively, initialize place cells given polar coordinates and arrange on concentric circles
         but I do not know how to make them evenly spaced that way
         for now the environment is assumed to be square and centered at (0,0)
-        
+
         INPUTS:
             nx          -   number of place cells in x direction
             ny          -   number of place cells in y direction
@@ -148,7 +152,7 @@ class PlaceCells:
 
         with nengo.Network() as net:
             net.placecells = nengo.Node(lambda t,x: self.place_cell_activation(x), size_in=2, size_out=self.n_place_cells)
-        
+
         self.net = net
 
     def place_cell_activation(self, pos):
@@ -160,10 +164,10 @@ class PlaceCells:
 
         INPUTS:
             pos         -   position to be encoded
-        
+
         RETURNS:
             activations -   vector encoding activities of all place cells
-        '''    
+        '''
         pos = np.expand_dims(pos,1)
         enumerator = np.sqrt(np.sum( (pos - self.cell_locs)**2 ,axis=0))**2
         denominator = 2 * self.sigma**2
