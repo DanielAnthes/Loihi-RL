@@ -47,7 +47,39 @@ class CriticNet:
             net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
             net.conn = nengo.Connection(net.input, net.output, function=lambda x: random(1)) # TODO add learning here
+            net.conn.learning_rule_type = nengo.PES()
         self.net = net
+
+
+class ErrorNode:
+    '''
+    Computes delta as described in Foster et al.
+    To avoid recomputation of the states and to enable error feedback during simulation
+    To do this keep value prediction at time t: V_t as the state of the Error Node
+    on receiving the reward and new prediction V_t+1 computes delta as:
+
+        delta = Reward + discount*V_t+1 - V_t
+    
+    Probably, this will cause the error signal to be delayed and applied at the wrong time.
+    TODO check whether this still works or is complete nonsense
+    '''
+    def __init__(self, discount):
+        self.state = None
+        self.discount = discount
+
+        with nengo.Network() as net:
+            net.errornode = nengo.Node(lambda t,input: self.update(input), size_in=2, size_out=1)
+
+        self.net = net
+
+    def update(self, input):
+        if self.state is None:
+            return 0 # no error without prediction
+        reward = input[0]
+        value = input[1]
+        delta = reward + self.discount*value - self.state
+        self.state = value
+        return delta
 
 
 class DecisionNode:

@@ -3,7 +3,7 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
-BACKEND = 'LOIHI' # choice of CPU, GPU and LOIHI
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 
 
 
@@ -16,7 +16,7 @@ with nengo.Network() as model:
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
     envstate = nengo.Node(lambda time, action: env.step(int(action)), size_in=1, size_out=5)
-    
+
     # compute place cell activations
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
     
@@ -30,6 +30,10 @@ with nengo.Network() as model:
     # execute action in environment
     nengo.Connection(agent.DecisionMaker.net.choicenode, envstate)
 
+    # connect error node
+    nengo.Connection(envstate[2], agent.Error.net.errornode[0])
+    nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
+    nengo.Connection(agent.Error.net.errornode, agent.Critic.net.conn.learning_rule)
 
 if BACKEND == 'CPU':
     sim = nengo.Simulator(model)

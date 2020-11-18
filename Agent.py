@@ -1,7 +1,7 @@
 import nengo
 import numpy as np
 
-from Networks import ActorNet, CriticNet, PlaceCells, DecisionNode
+from Networks import ActorNet, CriticNet, PlaceCells, DecisionNode, ErrorNode
 
 
 class Mouse:
@@ -27,3 +27,4 @@ class Mouse:
         self.Critic = CriticNet(n_pc=n_place_cells, n_neuron_in=2000, n_neuron_out=100) # initialize neural net for critic
         self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
         self.DecisionMaker = DecisionNode(action_indices)
+        self.Error = ErrorNode(self.gamma)
