@@ -8,7 +8,7 @@ class Maze:
     def __init__(self):
         # coordinates given in meters, (0,0) marks center of the maze
         self.speed = 0.3 # m/s speed of the mouse
-        self.timestep = 0.1 # seconds, discrete time steps
+        self.timestep = 0.01 # seconds, discrete time steps
         self.diameter = 2 # meters, diameter of the maze
         self.platformsize = 0.1 # meters, diameter of platform
         # self.platform_loc = np.array([0.6,-0.6], dtype='float') # location of platform x,y coordinates in meters
@@ -40,7 +40,7 @@ class Maze:
 
             INPUTS:
                 an action represented as integer in [0,7]
-            
+
             OUTPUTS:
                 a numpy array with [xpos, ypos, reward, done, time]
                 with

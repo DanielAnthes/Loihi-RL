@@ -20,7 +20,7 @@ with nengo.Network() as model:
 
     # compute place cell activations
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
-    
+
     # place cells give input to actor and critic
     nengo.Connection(agent.PlaceCells.net.placecells, agent.Critic.net.input)
     nengo.Connection(agent.PlaceCells.net.placecells, agent.Actor.net.input)
@@ -41,7 +41,7 @@ with nengo.Network() as model:
     envprobe = nengo.Probe(envstate)
 
 if BACKEND == 'CPU':
-    sim = nengo.Simulator(model)
+    sim = nengo.Simulator(model, dt=env.timestep)
 
 elif BACKEND == 'GPU':
     import nengo_ocl
@@ -50,15 +50,15 @@ elif BACKEND == 'GPU':
     platform = cl.get_platforms()
     my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
     ctx = cl.Context(devices=my_gpu_devices)
-    sim = nengo_ocl.Simulator(model, context=ctx)
+    sim = nengo_ocl.Simulator(model, context=ctx, dt=env.timestep)
 
 elif BACKEND == 'LOIHI':
     import nengo_loihi
-    sim = nengo_loihi.Simulator(model)
+    sim = nengo_loihi.Simulator(model, dt=env.timestep)
 
 
 with sim:
-    sim.run(100)
+    sim.run(300)
 
 plt.figure()
 plt.subplot(311)
