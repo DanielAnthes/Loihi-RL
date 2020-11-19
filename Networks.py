@@ -22,8 +22,9 @@ class ActorNet:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
             net.conn = nengo.Connection(net.input, net.output,
                                         function=lambda x: random(8),
+                                        #function=lambda x: np.zeros(8),
                                         solver=nengo.solvers.LstsqL2(weights=True),
-                                        learning_rule_type=Learning.TDL(learning_rate=1e-6))    # TODO write the actual TDL rule, not Oja
+                                        learning_rule_type=Learning.TDL(learning_rate=6e-8))    # TODO write the actual TDL rule, not Oja
                                         # learning_rule_type=nengo.Oja())                                                       # TODO if something goes wrong here take a good long look at the initial connection function
         self.net = net
 
