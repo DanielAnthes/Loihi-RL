@@ -5,8 +5,8 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
-BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
-PLOT_TRAJECTORIES = False # True to plot the trajectories the mouse took
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
 
 
 # set up simulation, connect networks
@@ -60,7 +60,7 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-    sim.run(2400)
+    sim.run(120)
 
 '''
 network plots

@@ -64,14 +64,14 @@ class SimTDL(Operator):
     Class for nengo.builder.learning_rules
     '''
 
-    def __init__(self, pre_filtered, post_filtered, weights, delta, learning_rate, beta, tag=None):
+    def __init__(self, pre_filtered, post_filtered, weights, error, delta, learning_rate, beta, encoders=None, tag=None):
         super(SimTDL, self).__init__(tag=tag)
         self.learning_rate = learning_rate
         self.beta = beta
 
         self.sets = []
         self.incs = []
-        self.reads = [pre_filtered, post_filtered, weights]
+        self.reads = [pre_filtered, post_filtered, weights, error] + ([] if encoders is None else [encoders])
         self.updates = [delta]
 
     @property
@@ -90,6 +90,14 @@ class SimTDL(Operator):
     def weights(self):
         return self.reads[2]
 
+    @property
+    def error(self):
+        return self.reads[3]
+
+    @property
+    def encoders(self):
+        return None if len(self.reads) < 5 else self.reads[4]
+
     def _descstr(self):
         return 'pre=%s, post=%s -> %s' % (self.pre_filtered, self.post_filtered, self.delta)
 
@@ -97,7 +105,15 @@ class SimTDL(Operator):
         weights = signals[self.weights]
         pre_filtered = signals[self.pre_filtered]
         post_filtered = signals[self.post_filtered]
+        error = signals[self.error]
         delta = signals[self.delta]
+
+        def step_simtdl():
+            dz = error * post_filtered
+            delta[...] = weights * (self.learning_rate * dz[:,None])
+        return step_simtdl
+
+        ''' backup of Oja
         alpha = self.learning_rate * dt
         beta = self.beta
 
@@ -108,6 +124,7 @@ class SimTDL(Operator):
             delta[...] += np.outer(alpha * post_filtered, pre_filtered)
 
         return step_simtdl
+        '''
 
 @Builder.register(TDL)
 def build_tdl(model, tdl, rule):
@@ -117,20 +134,28 @@ def build_tdl(model, tdl, rule):
 
     conn = rule.connection
 
+    error = Signal(shape=rule.size_in, name="TDL:error")
+    model.add_op(Reset(error))
+
+    model.sig[rule]["in"] = error
     pre_activities = model.sig[get_pre_ens(conn).neurons]["out"]
     post_activities = model.sig[get_post_ens(conn).neurons]["out"]
+    encoders = model.sig[get_post_ens(conn)]["encoders"][:,conn.post_slice]
     pre_filtered = build_or_passthrough(model, tdl.pre_synapse, pre_activities)
     post_filtered = build_or_passthrough(model, tdl.post_synapse, post_activities)
 
     model.add_op(SimTDL(pre_filtered,
                         post_filtered,
                         model.sig[conn]['weights'],
+                        error,
                         model.sig[rule]['delta'],
                         learning_rate=tdl.learning_rate,
-                        beta=tdl.beta))
+                        beta=tdl.beta,
+                        encoders=encoders))
 
     model.sig[rule]['pre_filtered'] = pre_filtered
     model.sig[rule]['post_filtered'] = post_filtered
+    model.sig[rule]['error'] = error
 
 def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
     assert (
