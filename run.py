@@ -4,7 +4,7 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
-BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
 
 
 
@@ -61,10 +61,13 @@ with sim:
     sim.run(2)
 
 plt.figure()
-plt.subplot(211)
+plt.subplot(311)
 plt.plot(sim.trange(), sim.data[errorprobe])
 plt.title("Error Signal")
-plt.subplot(212)
+plt.subplot(312)
 plt.plot(sim.trange(), sim.data[envprobe][:,:-1])
 plt.legend(["xloc", "yloc", "reward", "done"])
+plt.subplot(313)
+plt.plot(sim.trange(), sim.data[envprobe][:,2])
+plt.title("Reward")
 plt.show()
