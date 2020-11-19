@@ -156,7 +156,7 @@ def build_tdl(model, tdl, rule):
     model.sig[rule]['post_filtered'] = post_filtered
     model.sig[rule]['error'] = error
 
-def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
+def plan_tdl(queue, pre, post, weights, errors, delta, alpha, beta, encoders=None, tag=None):
     assert (
         len(pre) == len(post) == len(weights) == len(delta) == alpha.size == beta.size
     )
@@ -194,6 +194,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         __global const int *weights_stride0s,
         __global const int *weights_starts,
         __global const ${type} *weights_data,
+        __global const ${type} *errors,
         __global const int *delta_stride0s,
         __global const int *delta_starts,
         __global ${type} *delta_data,
@@ -212,11 +213,12 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         const ${type} post = post_data[post_starts[k] + i*post_stride0s[k]];
         const ${type} weight = weights_data[
             weights_starts[k] + i*weights_stride0s[k] + j];
+        const ${type} error = errors[sizeof(errors) / sizeof(errors[0])];
         const ${type} alpha = alphas[k];
         const ${type} beta = betas[k];
         if (i < shape0) {
             delta[i*delta_stride0s[k] + j] =
-                alpha * post * (pre - beta * weight * post);
+                alpha * error * (pre * post);
         }
     }
     """
@@ -236,6 +238,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         weights.cl_stride0s,
         weights.cl_starts,
         weights.cl_buf,
+        errors.cl_buf,
         delta.cl_stride0s,
         delta.cl_starts,
         delta.cl_buf,
@@ -254,6 +257,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         pre.nbytes
         + post.nbytes
         + weights.nbytes
+        + errors.nbytes
         + delta.nbytes
         + alpha.nbytes
         + beta.nbytes
@@ -264,9 +268,10 @@ def plan_SimTDL(self, ops):
     pre = self.all_data[[self.sidx[op.pre_filtered] for op in ops]]
     post = self.all_data[[self.sidx[op.post_filtered] for op in ops]]
     weights = self.all_data[[self.sidx[op.weights] for op in ops]]
+    error = self.all_data[[self.sidx[op.error] for op in ops]]
     delta = self.all_data[[self.sidx[op.delta] for op in ops]]
     alpha = self.Array([op.learning_rate * self.model.dt for op in ops])
     beta = self.Array([op.beta for op in ops])
-    return [plan_tdl(self.queue, pre, post, weights, delta, alpha, beta)]
+    return [plan_tdl(self.queue, pre, post, weights, error, delta, alpha, beta)]
 
 setattr(nengo_ocl.Simulator, 'plan_SimTDL', plan_SimTDL)
