@@ -109,7 +109,7 @@ class SimTDL(Operator):
         delta = signals[self.delta]
 
         def step_simtdl():
-            delta[...] = self.learning_rate * error * np.outer(pre_filtered, post_filtered).T
+            delta[...] = self.learning_rate * dt * error * np.outer(pre_filtered, post_filtered).T
         return step_simtdl
 
         ''' backup of Oja

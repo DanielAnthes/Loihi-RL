@@ -60,7 +60,7 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-    sim.run(200)
+    sim.run(900)
 
 '''
 network plots
@@ -88,7 +88,7 @@ if PLOT_TRAJECTORIES:
     episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
     episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
 
-    plot_columns = 3
+    plot_columns = 2
     plot_rows = ceil(len(episode_indices) / plot_columns)
 
     prior = 0
@@ -97,8 +97,8 @@ if PLOT_TRAJECTORIES:
     plt.figure()
 
     for index in episode_indices:
-        vx = sim.data[envprobe][int(prior):int(index),1]
-        vy = sim.data[envprobe][int(prior):int(index),2]
+        vx = sim.data[envprobe][int(prior):int(index),0]
+        vy = sim.data[envprobe][int(prior):int(index),1]
         sub = int(plot_rows * 100 + plot_columns * 10 + n)
 
         ax = plt.subplot(sub)
