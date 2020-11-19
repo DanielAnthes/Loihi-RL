@@ -60,11 +60,7 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-<<<<<<< HEAD
     sim.run(1000)
-=======
-    sim.run(900)
->>>>>>> actor-iss8
 
 '''
 network plots
