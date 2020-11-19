@@ -60,7 +60,7 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-    sim.run(120)
+    sim.run(200)
 
 '''
 network plots

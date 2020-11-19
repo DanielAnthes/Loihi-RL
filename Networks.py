@@ -114,8 +114,9 @@ class DecisionNode:
         RETURNS:
             decision    -   integer index of choice made
         '''
-        pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
-        if np.sum(activation_in) == 0: # avoid division by zero
+        #pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
+        pos_activation = np.maximum(activation_in, 0)
+        if np.sum(pos_activation) == 0: # avoid division by zero
             decision = choice(self.actions)
         else:
             probs = pos_activation / np.sum(pos_activation)
