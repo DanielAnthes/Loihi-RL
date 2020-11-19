@@ -77,10 +77,11 @@ class ErrorNode:
         self.net = net
 
     def update(self, input):
-        if self.state is None:
-            return 0 # no error without prediction
         reward = input[0]
         value = input[1]
+        if self.state is None:
+            self.state = value
+            return 0 # no error without prediction
         delta = reward + self.discount*value - self.state
         self.state = value
         return delta

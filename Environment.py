@@ -17,9 +17,9 @@ class Maze:
         self.mousepos = np.array([0,1], dtype='float') # starting position of the mouse, north by default
         self.done = False # whether mouse has reached platform
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
-        self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations
-        
-        self.max_time = 120 # maximum trial duration in seconds
+        #self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations
+        self.starting_pos = np.array([[0,0.1],[0.1,0],[0,-0.1],[-0.1,0]], dtype='float') # possible starting locations
+        self.max_time = 2400 # maximum trial duration in seconds
         self.time = 0
 
     def _outOfBounds(self, loc):

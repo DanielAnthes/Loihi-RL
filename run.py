@@ -58,7 +58,7 @@ elif BACKEND == 'LOIHI':
 
 
 with sim:
-    sim.run(2)
+    sim.run(100)
 
 plt.figure()
 plt.subplot(311)
