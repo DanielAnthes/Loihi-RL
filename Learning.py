@@ -16,6 +16,12 @@ from nengo.ensemble import Ensemble, Neurons
 from nengo.exceptions import BuildError
 from nengo.node import Node
 
+import pyopencl as cl
+import nengo_ocl
+from mako.template import Template
+from nengo_ocl.plan import Plan
+from nengo_ocl.utils import as_ascii, indent, nonelist, round_up
+
 import numpy as np
 
 class TDL(LearningRuleType):
@@ -125,3 +131,118 @@ def build_tdl(model, tdl, rule):
 
     model.sig[rule]['pre_filtered'] = pre_filtered
     model.sig[rule]['post_filtered'] = post_filtered
+
+def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
+    assert (
+        len(pre) == len(post) == len(weights) == len(delta) == alpha.size == beta.size
+    )
+    N = len(pre)
+
+    for arr in (pre, post):  # vectors
+        assert (arr.shape1s == 1).all()
+    for arr in (delta, weights):  # matrices
+        assert (arr.stride1s == 1).all()
+
+    assert (post.shape0s == weights.shape0s).all()
+    assert (pre.shape0s == weights.shape1s).all()
+    assert (weights.shape0s == delta.shape0s).all()
+    assert (weights.shape1s == delta.shape1s).all()
+
+    assert (
+        pre.ctype
+        == post.ctype
+        == weights.ctype
+        == delta.ctype
+        == alpha.ctype
+        == beta.ctype
+    )
+
+    text = """
+    __kernel void tdl(
+        __global const int *shape0s,
+        __global const int *shape1s,
+        __global const int *pre_stride0s,
+        __global const int *pre_starts,
+        __global const ${type} *pre_data,
+        __global const int *post_stride0s,
+        __global const int *post_starts,
+        __global const ${type} *post_data,
+        __global const int *weights_stride0s,
+        __global const int *weights_starts,
+        __global const ${type} *weights_data,
+        __global const int *delta_stride0s,
+        __global const int *delta_starts,
+        __global ${type} *delta_data,
+        __global const ${type} *alphas,
+        __global const ${type} *betas
+    )
+    {
+        const int ij = get_global_id(0);
+        const int k = get_global_id(1);
+        const int shape0 = shape0s[k];
+        const int shape1 = shape1s[k];
+        const int i = ij / shape1;
+        const int j = ij % shape1;
+        __global ${type} *delta = delta_data + delta_starts[k];
+        const ${type} pre = pre_data[pre_starts[k] + j*pre_stride0s[k]];
+        const ${type} post = post_data[post_starts[k] + i*post_stride0s[k]];
+        const ${type} weight = weights_data[
+            weights_starts[k] + i*weights_stride0s[k] + j];
+        const ${type} alpha = alphas[k];
+        const ${type} beta = betas[k];
+        if (i < shape0) {
+            delta[i*delta_stride0s[k] + j] =
+                alpha * post * (pre - beta * weight * post);
+        }
+    }
+    """
+
+    textconf = dict(type=pre.ctype)
+    text = as_ascii(Template(text, output_encoding="ascii").render(**textconf))
+
+    full_args = (
+        delta.cl_shape0s,
+        delta.cl_shape1s,
+        pre.cl_stride0s,
+        pre.cl_starts,
+        pre.cl_buf,
+        post.cl_stride0s,
+        post.cl_starts,
+        post.cl_buf,
+        weights.cl_stride0s,
+        weights.cl_starts,
+        weights.cl_buf,
+        delta.cl_stride0s,
+        delta.cl_starts,
+        delta.cl_buf,
+        alpha,
+        beta,
+    )
+    _fn = cl.Program(queue.context, text).build().tdl
+    _fn.set_args(*[arr.data for arr in full_args])
+
+    lsize = None
+    gsize = (delta.sizes.max(), N)
+    plan = Plan(queue, _fn, gsize, lsize=lsize, name="cl_tdl", tag=tag)
+    plan.full_args = full_args  # prevent garbage-collection
+    plan.flops_per_call = 6 * delta.sizes.sum()
+    plan.bw_per_call = (
+        pre.nbytes
+        + post.nbytes
+        + weights.nbytes
+        + delta.nbytes
+        + alpha.nbytes
+        + beta.nbytes
+    )
+    return plan
+
+def plan_SimTDL(self, ops):
+    pre = self.all_data[[self.sidx[op.pre_filtered] for op in ops]]
+    post = self.all_data[[self.sidx[op.post_filtered] for op in ops]]
+    weights = self.all_data[[self.sidx[op.weights] for op in ops]]
+    delta = self.all_data[[self.sidx[op.delta] for op in ops]]
+    alpha = self.Array([op.learning_rate * self.model.dt for op in ops])
+    beta = self.Array([op.beta for op in ops])
+    return [plan_tdl(self.queue, pre, post, weights, delta, alpha, beta)]
+
+setattr(nengo_ocl.Simulator, 'plan_SimTDL', plan_SimTDL)
