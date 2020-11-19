@@ -50,7 +50,7 @@ class CriticNet:
         with nengo.Network() as net:
             net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(net.input, net.output, function=lambda x: random(1)) # TODO add learning here
+            net.conn = nengo.Connection(net.input, net.output, function=lambda x: [0]) # TODO add learning here
             net.conn.learning_rule_type = nengo.PES()
         self.net = net
 
