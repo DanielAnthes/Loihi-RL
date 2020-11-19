@@ -114,7 +114,7 @@ class DecisionNode:
         RETURNS:
             decision    -   integer index of choice made
         '''
-        pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: ugly hack, this will probably cause problems later
+        pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
         if np.sum(activation_in) == 0: # avoid division by zero
             decision = choice(self.actions)
         else:

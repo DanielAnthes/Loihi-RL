@@ -36,6 +36,7 @@ with nengo.Network() as model:
     nengo.Connection(envstate[2], agent.Error.net.errornode[0])
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
     nengo.Connection(agent.Error.net.errornode, agent.Critic.net.conn.learning_rule)
+    nengo.Connection(agent.Error.net.errornode, agent.Actor.net.conn.learning_rule)
 
     # add Probes
     errorprobe = nengo.Probe(agent.Error.net.errornode)

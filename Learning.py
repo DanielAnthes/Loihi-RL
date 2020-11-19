@@ -45,7 +45,7 @@ class TDL(LearningRuleType):
     beta = NumberParam('beta', low=0, readonly=True, default=1.0)
 
     def __init__(self, learning_rate=Default, pre_synapse=Default, post_synapse=Default, beta=Default):
-        super(TDL, self).__init__(learning_rate, size_in=0)
+        super(TDL, self).__init__(learning_rate, size_in=1)
 
         self.beta = beta
         self.pre_synapse = pre_synapse
