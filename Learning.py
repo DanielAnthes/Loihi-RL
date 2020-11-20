@@ -15,12 +15,15 @@ from nengo.connection import LearningRule
 from nengo.ensemble import Ensemble, Neurons
 from nengo.exceptions import BuildError
 from nengo.node import Node
-
-import pyopencl as cl
-import nengo_ocl
+try:
+    import pyopencl as cl
+    import nengo_ocl
+    from nengo_ocl.plan import Plan
+    from nengo_ocl.utils import as_ascii, indent, nonelist, round_up
+    GPU = True
+except ModuleNotFoundError:
+    GPU = False
 from mako.template import Template
-from nengo_ocl.plan import Plan
-from nengo_ocl.utils import as_ascii, indent, nonelist, round_up
 
 import numpy as np
 
@@ -245,7 +248,8 @@ def plan_tdl(queue, pre, post, weights, errors, delta, alpha, beta, encoders=Non
         alpha,
         beta,
     )
-    _fn = cl.Program(queue.context, text).build().tdl
+    if GPU:
+        _fn = cl.Program(queue.context, text).build().tdl
     _fn.set_args(*[arr.data for arr in full_args])
 
     lsize = None
@@ -274,4 +278,5 @@ def plan_SimTDL(self, ops):
     beta = self.Array([op.beta for op in ops])
     return [plan_tdl(self.queue, pre, post, weights, error, delta, alpha, beta)]
 
-setattr(nengo_ocl.Simulator, 'plan_SimTDL', plan_SimTDL)
+if GPU:
+    setattr(nengo_ocl.Simulator, 'plan_SimTDL', plan_SimTDL)
