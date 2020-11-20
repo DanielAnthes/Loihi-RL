@@ -1,8 +1,11 @@
 import nengo
 import util
 
+import matplotlib.pyplot as plt
+
 from Environment import Maze
 from Agent import Mouse
+from Networks import Switch
 
 BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
 PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
@@ -17,6 +20,9 @@ with nengo.Network() as model:
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
     envstate = nengo.Node(lambda time, action: env.step(int(action)), size_in=1, size_out=5)
+
+    # add node to control learning
+    model.switch = Switch(state=1)
 
     # compute place cell activations
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
@@ -34,31 +40,17 @@ with nengo.Network() as model:
     # connect error node
     nengo.Connection(envstate[2], agent.Error.net.errornode[0])
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
+    nengo.Connection(model.switch.net.switch, agent.Error.net.errornode[2])
     nengo.Connection(agent.Error.net.errornode, agent.Critic.net.conn.learning_rule)
     nengo.Connection(agent.Error.net.errornode, agent.Actor.net.conn.learning_rule)
 
     # add Probes
     errorprobe = nengo.Probe(agent.Error.net.errornode)
     envprobe = nengo.Probe(envstate)
+    switchprobe = nengo.Probe(model.switch.net.switch)
 
-if BACKEND == 'CPU':
-    sim = nengo.Simulator(model, dt=env.timestep)
+sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
 
-elif BACKEND == 'GPU':
-    import nengo_ocl
-    import pyopencl as cl
-    # set device to avoid being prompted every time
-    platform = cl.get_platforms()
-    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
-    ctx = cl.Context(devices=my_gpu_devices)
-    sim = nengo_ocl.Simulator(model, context=ctx, dt=env.timestep)
-
-elif BACKEND == 'LOIHI':
-    import nengo_loihi
-    sim = nengo_loihi.Simulator(model, dt=env.timestep)
-
-
-with sim:
-    sim.run(200)
-
-util.plot_sim(sim, envprobe, errorprobe)
+util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+util.plot_value_func(model, agent, env, BACKEND)
+plt.show()
