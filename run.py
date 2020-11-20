@@ -41,24 +41,7 @@ with nengo.Network() as model:
     errorprobe = nengo.Probe(agent.Error.net.errornode)
     envprobe = nengo.Probe(envstate)
 
-if BACKEND == 'CPU':
-    sim = nengo.Simulator(model, dt=env.timestep)
-
-elif BACKEND == 'GPU':
-    import nengo_ocl
-    import pyopencl as cl
-    # set device to avoid being prompted every time
-    platform = cl.get_platforms()
-    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
-    ctx = cl.Context(devices=my_gpu_devices)
-    sim = nengo_ocl.Simulator(model, context=ctx, dt=env.timestep)
-
-elif BACKEND == 'LOIHI':
-    import nengo_loihi
-    sim = nengo_loihi.Simulator(model, dt=env.timestep)
-
-
-with sim:
-    sim.run(200)
+sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe)
+util.plot_value_func(model, agent, env, BACKEND)
