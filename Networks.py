@@ -73,19 +73,20 @@ class ErrorNode:
         self.discount = discount
 
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t,input: self.update(input), size_in=2, size_out=1)
+            net.errornode = nengo.Node(lambda t,input: self.update(input), size_in=3, size_out=1)
 
         self.net = net
 
     def update(self, input):
         reward = input[0]
         value = input[1]
+        switch = input[2]
         if self.state is None:
             self.state = value
             return 0 # no error without prediction
         delta = reward + self.discount*value - self.state
         self.state = value
-        return delta
+        return delta*switch
 
 
 class DecisionNode:
@@ -181,3 +182,11 @@ class PlaceCells:
         denominator = 2 * self.sigma**2
         activations = np.exp(-(enumerator / denominator))
         return activations
+
+class Switch:
+    def __init__(self, state=1):
+        self.state = state
+
+        with nengo.Network() as net:
+            net.switch = nengo.Node(lambda t: self.state, size_out=1)
+        self.net = net

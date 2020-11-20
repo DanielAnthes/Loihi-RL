@@ -5,23 +5,25 @@ import numpy as np
 from math import ceil
 import nengo
 
-def plot_sim(sim, envprobe, errorprobe):
+def plot_sim(sim, envprobe, errorprobe, switchprobe):
     '''
     network plots
     '''
     plt.figure()
-    plt.subplot(311)
+    plt.subplot(411)
     plt.plot(sim.trange(), sim.data[errorprobe])
     plt.title("Error Signal")
-    plt.subplot(312)
+    plt.subplot(412)
     plt.plot(sim.trange(), sim.data[envprobe][:,:-1])
     plt.ylim([-1.0, 1.0])
     plt.legend(["xloc", "yloc", "reward", "done"])
-    plt.subplot(313)
+    plt.subplot(413)
     plt.plot(sim.trange(), sim.data[envprobe][:,2])
     plt.title("Reward")
-    plt.show()
-
+    plt.subplot(414)
+    plt.plot(sim.trange(), sim.data[switchprobe])
+    plt.title("Learning")
+    plt.ylim([0,1.5])
 
 def plot_trajectories(sim, env, envprobe):
     '''
@@ -62,6 +64,7 @@ def plot_trajectories(sim, env, envprobe):
 
 def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation=0.1):
     '''
+    TODO: add smoothing over presentation of each state
     simulate the output of the agents Critic net for positions all over the arena and plot
     an approximation of the value surface
     
@@ -90,10 +93,12 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
         place_cells = agent.PlaceCells.net
         value_func = agent.Critic.net
 
+        model.switch.state=0 # switch off learning for plotting
+
         nengo.Connection(eval_node, place_cells.placecells)
         nengo.Connection(place_cells.placecells, value_func.input)
 
-        value_probe = nengo.Probe(value_func.output)
+        value_probe = nengo.Probe(value_func.output, synapse=len_presentation)
         
     sim = simulate_with_backend(backend, model, len(locs)*len_presentation, env.timestep)
     
