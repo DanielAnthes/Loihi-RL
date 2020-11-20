@@ -8,7 +8,7 @@ class ActorNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, n_neuron_in, n_neuron_out):
+    def __init__(self, n_pc, input_node, n_neuron_out):
         '''
         Initialize actor net as a nengo network object
 
@@ -18,9 +18,8 @@ class ActorNet:
                 n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
-            net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
-            net.conn = nengo.Connection(net.input, net.output,
+            net.conn = nengo.Connection(input_node, net.output,
                                         function=lambda x: [0]*8,
                                         #function=lambda x: np.zeros(8),
                                         solver=nengo.solvers.LstsqL2(weights=True),
@@ -34,7 +33,7 @@ class CriticNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, n_neuron_in, n_neuron_out):
+    def __init__(self, n_pc, input_node, n_neuron_out):
         '''
         initialize critic net as a nengo network object
 
@@ -49,9 +48,8 @@ class CriticNet:
                 give input value 1 at the same time this may be wasteful, choose smaller radius?
         '''
         with nengo.Network() as net:
-            net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(net.input, net.output, function=lambda x: [0]) # TODO add learning here
+            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0]) # TODO add learning here
             net.conn.learning_rule_type = nengo.PES()
         self.net = net
 
@@ -118,7 +116,7 @@ class DecisionNode:
             decision    -   integer index of choice made
         '''
         coin = random()
-        if coin > 0.25 and not self.lastaction is None: # repeat last action
+        if coin > 0.25 and self.lastaction is not None: # repeat last action
                 decision = self.lastaction
         #pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
         else: 
@@ -128,6 +126,7 @@ class DecisionNode:
             else:
                 probs = pos_activation / np.sum(pos_activation)
                 decision = choice(self.actions, p=probs)
+        self.lastaction = decision
         return decision
 
 

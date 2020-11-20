@@ -83,8 +83,7 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
     idx = np.sqrt(xx**2 + yy**2) < env.diameter / 2 # indices of all locations that fall inside the maze
     xx = xx[idx]
     yy = yy[idx]
-    locs = np.array([xx.flatten(), yy.flatten()])
-    locs = locs.T
+    locs = np.array([xx.flatten(), yy.flatten()]).T
 
     # set up model
     with model:
@@ -95,7 +94,7 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
         model.switch.state=0 # switch off learning for plotting
 
         nengo.Connection(eval_node, place_cells.placecells)
-        nengo.Connection(place_cells.placecells, value_func.input)
+        nengo.Connection(place_cells.placecells, agent.net.input)
 
         value_probe = nengo.Probe(value_func.output, synapse=len_presentation)
 

@@ -8,7 +8,7 @@ from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
-BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
 
 
@@ -23,14 +23,13 @@ with nengo.Network() as model:
     envstate = nengo.Node(lambda time, action: env.step(int(action)), size_in=1, size_out=5)
 
     # add node to control learning
-    model.switch = Switch(state=0)
+    model.switch = Switch(state=1)
 
     # compute place cell activations
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
-    nengo.Connection(agent.PlaceCells.net.placecells, agent.Critic.net.input)
-    nengo.Connection(agent.PlaceCells.net.placecells, agent.Actor.net.input)
+    nengo.Connection(agent.PlaceCells.net.placecells, agent.net.input)
 
     # take actor net as input to decision node
     nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
