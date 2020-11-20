@@ -5,7 +5,7 @@ import nengo
 from Environment import Maze
 from Agent import Mouse
 
-BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
 PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
 
 
@@ -111,7 +111,7 @@ if PLOT_TRAJECTORIES:
         ax.axis('equal')
         plt.xlim([-1.5, 1.5])
         plt.ylim([-1.5, 1.5])
-        plt.title("Trajectory %d-%dms" % (int(prior), int(index)))
+        plt.title("%d-%dms" % (int(prior), int(index)))
 
         prior = index + 1
         n += 1
