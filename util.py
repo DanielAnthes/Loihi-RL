@@ -25,24 +25,27 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     plt.title("Learning")
     plt.ylim([0,1.5])
 
-def plot_trajectories(sim, env, envprobe):
+def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     '''
     trajectory plots
     '''
     episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
     episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
+    colours = np.flip(np.linspace(0.0, max(sim.trange()), len(episode_indices)) / (max(sim.trange())*1.75))
 
     fig = plt.figure()
     ax = plt.gca()
 
     last_episode = 0
-    for episode in episode_indices:
+    for episode, colour in zip(episode_indices, colours):
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
-        colour = np.random.random(3)
-        ax.plot(vx, vy, '-', alpha=0.6, c=colour, label="%d-%d" % (int(last_episode), int(episode))) # plot all points
-        ax.plot(vx[0], vy[0], 'o', alpha=0.6, c=colour) # plot start point as o
-        ax.plot(vx[-1], vy[-1], 'x', alpha=0.6, c=colour) # plot end point as x
+        c = np.repeat(colour, 3)
+        ax.plot(vx, vy, '-', alpha=0.6, c=c, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
+        ax.plot(vx[0], vy[0], 'o', alpha=0.6, c=c)
+        if timestamps is True:
+            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, c=c, fontsize=8) # plot start point beginning t in s
+        ax.plot(vx[-1], vy[-1], '*', alpha=0.6, c=c) # plot end point as x
         last_episode = episode + 1
 
     arena = plt.Circle((0,0), 1, color='k', fill=False)
@@ -50,18 +53,20 @@ def plot_trajectories(sim, env, envprobe):
     ax.add_artist(platform)
     ax.add_artist(arena)
     ax.axis('equal')
-    ax.legend()
+    if labels is True:
+        ax.legend()
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
-    plt.title("trajectory")
+    plt.title("Trajectory")
+    plt.show()
 
-    
+
 def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation=0.1):
     '''
     TODO: add smoothing over presentation of each state
     simulate the output of the agents Critic net for positions all over the arena and plot
     an approximation of the value surface
-    
+
     INPUTS:
         model               -   model used for original simulation
         agent               -   a (trained) agent model containing the critic net
@@ -93,9 +98,9 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
         nengo.Connection(place_cells.placecells, value_func.input)
 
         value_probe = nengo.Probe(value_func.output, synapse=len_presentation)
-        
+
     sim = simulate_with_backend(backend, model, len(locs)*len_presentation, env.timestep)
-    
+
     n_timepoints_presentation = int(len_presentation/env.timestep)
     print(f"each location was presented for {n_timepoints_presentation} steps")
     values = sim.data[value_probe]
@@ -132,6 +137,5 @@ def simulate_with_backend(backend, model, duration, timestep):
 
     with sim:
         sim.run(duration)
-    
-    return sim
 
+    return sim
