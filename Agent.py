@@ -19,12 +19,32 @@ class Mouse:
         total number of place cells will be n1 x n2
         '''
         n_place_cells = n1*n2
+        n_neuron_in = 2000
+
         action_indices = list(range(len(env.actions)))
         self.env = env
         self.gamma = 0.95 # TODO given in paper? could not find it, discount factor
 
-        self.Actor = ActorNet(n_pc=n_place_cells, n_neuron_in=2000, n_neuron_out=200) # initialize neural net for actor
-        self.Critic = CriticNet(n_pc=n_place_cells, n_neuron_in=2000, n_neuron_out=100) # initialize neural net for critic
+        # Create shared input node
+        self.net = nengo.Network()
+        self.net.input = nengo.Ensemble(
+            n_neurons=n_neuron_in, 
+            dimensions=n_place_cells, 
+            radius=np.sqrt(n_place_cells)
+        )
+
+        # initialize neural net for actor
+        self.Actor = ActorNet(
+            n_pc=n_place_cells, 
+            input_node=self.net.input,
+            n_neuron_out=200
+        )
+        # initialize neural net for critic
+        self.Critic = CriticNet(
+            n_pc=n_place_cells, 
+            input_node=self.net.input,
+            n_neuron_out=100
+        ) 
         self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
         self.DecisionMaker = DecisionNode(action_indices)
         self.Error = ErrorNode(self.gamma)
