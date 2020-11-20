@@ -41,7 +41,8 @@ with nengo.Network() as model:
     errorprobe = nengo.Probe(agent.Error.net.errornode)
     envprobe = nengo.Probe(envstate)
 
-sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
+sim = util.simulate_with_backend(BACKEND, model, duration=1, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe)
 util.plot_value_func(model, agent, env, BACKEND)
+plt.show()

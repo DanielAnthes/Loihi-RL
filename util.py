@@ -60,9 +60,6 @@ def plot_trajectories(sim, env, envprobe):
         prior = index + 1
         n += 1
 
-    plt.show()
-
-
 def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation=0.1):
     '''
     simulate the output of the agents Critic net for positions all over the arena and plot
@@ -113,7 +110,9 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(xx,yy,value_evaluations.flatten(), cmap=cm.summer)
-    plt.show()
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Value")
 
 def simulate_with_backend(backend, model, duration, timestep):
     if backend == 'CPU':
