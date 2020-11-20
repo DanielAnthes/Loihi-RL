@@ -49,8 +49,9 @@ with nengo.Network() as model:
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
 
-sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
+sim = util.simulate_with_backend(BACKEND, model, duration=100, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 util.plot_value_func(model, agent, env, BACKEND)
+util.plot_trajectories(sim, env, envprobe)
 plt.show()
