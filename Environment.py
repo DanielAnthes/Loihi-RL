@@ -19,8 +19,9 @@ class Maze:
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         #self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
-        self.max_time = 120 # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 60 # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
+        self.actionmemory = list()
 
     def _outOfBounds(self, loc):
         '''
@@ -52,9 +53,10 @@ class Maze:
         '''
         # print(f"RECEIVED ACTION: {action}")
         self.time += self.timestep
+        self.actionmemory.append(action)
         if self.done: # check whether simulation has ended
             # print("mouse has reached the platform, resetting")
-            self.reset(self.starting_pos[np.random.choice(4),:]) # random starting position north, south, east, or west
+            self.reset(self._get_random_start()) # random starting position north, south, east, or west
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
 
@@ -88,3 +90,13 @@ class Maze:
         self.done = False
         self.mousepos = mousepos
         return self.mousepos
+
+    def _get_random_start(self):
+        '''
+        random restart position close to the edge of the arena
+        '''
+        radius=0.95 * self.diameter / 2
+        angle = np.random.random()*2*np.pi
+        x = radius * np.cos(angle)
+        y = radius * np.sin(angle)
+        return np.array([x,y])

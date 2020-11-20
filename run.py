@@ -1,5 +1,6 @@
 import nengo
 import util
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -22,7 +23,7 @@ with nengo.Network() as model:
     envstate = nengo.Node(lambda time, action: env.step(int(action)), size_in=1, size_out=5)
 
     # add node to control learning
-    model.switch = Switch(state=1)
+    model.switch = Switch(state=0)
 
     # compute place cell activations
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
@@ -49,9 +50,16 @@ with nengo.Network() as model:
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
 
-sim = util.simulate_with_backend(BACKEND, model, duration=100, timestep=env.timestep)
+sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 util.plot_value_func(model, agent, env, BACKEND)
 util.plot_trajectories(sim, env, envprobe)
+
+plt.figure()
+edges = np.array(range(9)) - 0.5
+print(edges)
+plt.hist(env.actionmemory, rwidth=0.8, align='mid', bins=edges)
+plt.title("action distribution")
+
 plt.show()
