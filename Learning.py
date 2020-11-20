@@ -64,14 +64,14 @@ class SimTDL(Operator):
     Class for nengo.builder.learning_rules
     '''
 
-    def __init__(self, pre_filtered, post_filtered, weights, delta, learning_rate, beta, tag=None):
+    def __init__(self, pre_filtered, post_filtered, weights, error, delta, learning_rate, beta, encoders=None, tag=None):
         super(SimTDL, self).__init__(tag=tag)
         self.learning_rate = learning_rate
         self.beta = beta
 
         self.sets = []
         self.incs = []
-        self.reads = [pre_filtered, post_filtered, weights]
+        self.reads = [pre_filtered, post_filtered, weights, error] + ([] if encoders is None else [encoders])
         self.updates = [delta]
 
     @property
@@ -90,6 +90,14 @@ class SimTDL(Operator):
     def weights(self):
         return self.reads[2]
 
+    @property
+    def error(self):
+        return self.reads[3]
+
+    @property
+    def encoders(self):
+        return None if len(self.reads) < 5 else self.reads[4]
+
     def _descstr(self):
         return 'pre=%s, post=%s -> %s' % (self.pre_filtered, self.post_filtered, self.delta)
 
@@ -97,7 +105,14 @@ class SimTDL(Operator):
         weights = signals[self.weights]
         pre_filtered = signals[self.pre_filtered]
         post_filtered = signals[self.post_filtered]
+        error = signals[self.error]
         delta = signals[self.delta]
+
+        def step_simtdl():
+            delta[...] = self.learning_rate * dt * error * np.outer(pre_filtered, post_filtered).T
+        return step_simtdl
+
+        ''' backup of Oja
         alpha = self.learning_rate * dt
         beta = self.beta
 
@@ -108,6 +123,7 @@ class SimTDL(Operator):
             delta[...] += np.outer(alpha * post_filtered, pre_filtered)
 
         return step_simtdl
+        '''
 
 @Builder.register(TDL)
 def build_tdl(model, tdl, rule):
@@ -117,22 +133,30 @@ def build_tdl(model, tdl, rule):
 
     conn = rule.connection
 
+    error = Signal(shape=rule.size_in, name="TDL:error")
+    model.add_op(Reset(error))
+
+    model.sig[rule]["in"] = error
     pre_activities = model.sig[get_pre_ens(conn).neurons]["out"]
     post_activities = model.sig[get_post_ens(conn).neurons]["out"]
+    encoders = model.sig[get_post_ens(conn)]["encoders"][:,conn.post_slice]
     pre_filtered = build_or_passthrough(model, tdl.pre_synapse, pre_activities)
     post_filtered = build_or_passthrough(model, tdl.post_synapse, post_activities)
 
     model.add_op(SimTDL(pre_filtered,
                         post_filtered,
                         model.sig[conn]['weights'],
+                        error,
                         model.sig[rule]['delta'],
                         learning_rate=tdl.learning_rate,
-                        beta=tdl.beta))
+                        beta=tdl.beta,
+                        encoders=encoders))
 
     model.sig[rule]['pre_filtered'] = pre_filtered
     model.sig[rule]['post_filtered'] = post_filtered
+    model.sig[rule]['error'] = error
 
-def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
+def plan_tdl(queue, pre, post, weights, errors, delta, alpha, beta, encoders=None, tag=None):
     assert (
         len(pre) == len(post) == len(weights) == len(delta) == alpha.size == beta.size
     )
@@ -170,6 +194,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         __global const int *weights_stride0s,
         __global const int *weights_starts,
         __global const ${type} *weights_data,
+        __global const ${type} *errors,
         __global const int *delta_stride0s,
         __global const int *delta_starts,
         __global ${type} *delta_data,
@@ -188,11 +213,12 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         const ${type} post = post_data[post_starts[k] + i*post_stride0s[k]];
         const ${type} weight = weights_data[
             weights_starts[k] + i*weights_stride0s[k] + j];
+        const ${type} error = errors[sizeof(errors) / sizeof(errors[0])];
         const ${type} alpha = alphas[k];
         const ${type} beta = betas[k];
         if (i < shape0) {
             delta[i*delta_stride0s[k] + j] =
-                alpha * post * (pre - beta * weight * post);
+                alpha * error * (pre * post);
         }
     }
     """
@@ -212,6 +238,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         weights.cl_stride0s,
         weights.cl_starts,
         weights.cl_buf,
+        errors.cl_buf,
         delta.cl_stride0s,
         delta.cl_starts,
         delta.cl_buf,
@@ -230,6 +257,7 @@ def plan_tdl(queue, pre, post, weights, delta, alpha, beta, tag=None):
         pre.nbytes
         + post.nbytes
         + weights.nbytes
+        + errors.nbytes
         + delta.nbytes
         + alpha.nbytes
         + beta.nbytes
@@ -240,9 +268,10 @@ def plan_SimTDL(self, ops):
     pre = self.all_data[[self.sidx[op.pre_filtered] for op in ops]]
     post = self.all_data[[self.sidx[op.post_filtered] for op in ops]]
     weights = self.all_data[[self.sidx[op.weights] for op in ops]]
+    error = self.all_data[[self.sidx[op.error] for op in ops]]
     delta = self.all_data[[self.sidx[op.delta] for op in ops]]
     alpha = self.Array([op.learning_rate * self.model.dt for op in ops])
     beta = self.Array([op.beta for op in ops])
-    return [plan_tdl(self.queue, pre, post, weights, delta, alpha, beta)]
+    return [plan_tdl(self.queue, pre, post, weights, error, delta, alpha, beta)]
 
 setattr(nengo_ocl.Simulator, 'plan_SimTDL', plan_SimTDL)

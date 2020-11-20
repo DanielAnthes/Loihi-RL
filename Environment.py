@@ -8,7 +8,7 @@ class Maze:
     def __init__(self):
         # coordinates given in meters, (0,0) marks center of the maze
         self.speed = 0.3 # m/s speed of the mouse
-        self.timestep = 0.1 # seconds, discrete time steps
+        self.timestep = 0.01 # seconds, discrete time steps
         self.diameter = 2 # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
         self.platformsize = 0.1 # meters, diameter of platform
         # self.platform_loc = np.array([0.6,-0.6], dtype='float') # location of platform x,y coordinates in meters
@@ -19,7 +19,7 @@ class Maze:
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         #self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
-        self.max_time = 2400 # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 120 # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
 
     def _outOfBounds(self, loc):

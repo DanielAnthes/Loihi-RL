@@ -22,8 +22,9 @@ class ActorNet:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
             net.conn = nengo.Connection(net.input, net.output,
                                         function=lambda x: random(8),
+                                        #function=lambda x: np.zeros(8),
                                         solver=nengo.solvers.LstsqL2(weights=True),
-                                        learning_rule_type=Learning.TDL(learning_rate=1e-6))    # TODO write the actual TDL rule, not Oja
+                                        learning_rule_type=Learning.TDL(learning_rate=6e-8))    # TODO write the actual TDL rule, not Oja
                                         # learning_rule_type=nengo.Oja())                                                       # TODO if something goes wrong here take a good long look at the initial connection function
         self.net = net
 
@@ -50,7 +51,7 @@ class CriticNet:
         with nengo.Network() as net:
             net.input = nengo.Ensemble(n_neurons=n_neuron_in, dimensions=n_pc, radius=np.sqrt(n_pc))
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(net.input, net.output, function=lambda x: random(1)) # TODO add learning here
+            net.conn = nengo.Connection(net.input, net.output, function=lambda x: [0]) # TODO add learning here
             net.conn.learning_rule_type = nengo.PES()
         self.net = net
 
@@ -101,6 +102,7 @@ class DecisionNode:
             actions     -   a vector of possible actions to choose from
         '''
         self.actions = actions
+        self.lastaction = None
         with nengo.Network() as net:
             net.choicenode = nengo.Node(lambda t,x: self.chooseAction(x), size_in=len(actions), size_out=1)
         self.net = net
@@ -114,12 +116,17 @@ class DecisionNode:
         RETURNS:
             decision    -   integer index of choice made
         '''
-        pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
-        if np.sum(activation_in) == 0: # avoid division by zero
-            decision = choice(self.actions)
-        else:
-            probs = pos_activation / np.sum(pos_activation)
-            decision = choice(self.actions, p=probs)
+        coin = random()
+        if coin > 0.25 and not self.lastaction is None: # repeat last action
+                decision = self.lastaction
+        #pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
+        else: 
+            pos_activation = np.maximum(activation_in, 0)
+            if np.sum(pos_activation) == 0: # avoid division by zero
+                decision = choice(self.actions)
+            else:
+                probs = pos_activation / np.sum(pos_activation)
+                decision = choice(self.actions, p=probs)
         return decision
 
 
