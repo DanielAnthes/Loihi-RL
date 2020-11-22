@@ -11,13 +11,10 @@ class Maze:
         self.timestep = 0.01 # seconds, discrete time steps
         self.diameter = 2 # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
         self.platformsize = 0.1 # meters, diameter of platform
-        # self.platform_loc = np.array([0.6,-0.6], dtype='float') # location of platform x,y coordinates in meters
         self.platform_loc = np.array([0,0], dtype='float') # location of platform x,y coordinates in meters
-        # self.platform_loc = np.array([0.2,-0.3], dtype='float') # location of platform x,y coordinates in meters
-        self.mousepos = np.array([0,1], dtype='float') # starting position of the mouse, north by default
+        self.mousepos = self._get_random_start()
         self.done = False # whether mouse has reached platform
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
-        #self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
         self.max_time = 60 # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
@@ -51,7 +48,8 @@ class Maze:
                     done    - 1 if target or time limit reached 0 otherwise
                     time    - float
         '''
-        # print(f"RECEIVED ACTION: {action}")
+        action = action.astype(int)[0]
+
         self.time += self.timestep
         self.actionmemory.append(action)
         if self.done: # check whether simulation has ended
@@ -68,7 +66,6 @@ class Maze:
 
         if self._outOfBounds(self.mousepos):
             print("out of bounds!")
-
 
         self.done = self._goalReached()
         reward = 1 if self.done else 0

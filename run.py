@@ -4,12 +4,12 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+
 from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
-BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
-PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
+BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
 STEPS = 1000
 
 
@@ -17,11 +17,11 @@ STEPS = 1000
 env = Maze()
 
 with nengo.Network() as model:
-    agent = Mouse(env, 23, 23, act_lr=0.01, crit_lr=0.01)
+    agent = Mouse(env, 23, 23, act_lr=6e-8, crit_lr=1e-4)
 
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
-    envstate = nengo.Node(lambda time, action: env.step(int(action)), size_in=1, size_out=5)
+    envstate = nengo.Node(lambda time, action: env.step(action), size_in=1, size_out=5)
 
     # add node to control learning
     model.switch = Switch(state=1)
@@ -36,7 +36,7 @@ with nengo.Network() as model:
     nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
 
     # execute action in environment
-    nengo.Connection(agent.DecisionMaker.net.choicenode, envstate)
+    nengo.Connection(agent.DecisionMaker.net.choicenode, envstate, synapse=0)
 
     # connect error node
     nengo.Connection(envstate[2], agent.Error.net.errornode[0])
@@ -55,11 +55,6 @@ sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.ti
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 util.plot_value_func(model, agent, env, BACKEND)
 util.plot_trajectories(sim, env, envprobe)
-
-plt.figure()
-edges = np.array(range(9)) - 0.5
-print(edges)
-plt.hist(env.actionmemory, rwidth=0.8, align='mid', bins=edges)
-plt.title("action distribution")
-
-plt.show()
+util.plot_actions_by_activation(env, agent)
+util.plot_actions_by_probability(env, agent)
+util.plot_actions_by_decision(env)
