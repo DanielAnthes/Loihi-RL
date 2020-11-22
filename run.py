@@ -10,6 +10,7 @@ from Networks import Switch
 
 BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 PLOT_TRAJECTORIES = True # True to plot the trajectories the mouse took
+STEPS = 1000
 
 
 # set up simulation, connect networks
@@ -49,7 +50,7 @@ with nengo.Network() as model:
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
 
-sim = util.simulate_with_backend(BACKEND, model, duration=1000, timestep=env.timestep)
+sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 util.plot_value_func(model, agent, env, BACKEND)
