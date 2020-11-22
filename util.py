@@ -41,11 +41,11 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
         c = np.repeat(colour, 3)
-        ax.plot(vx, vy, '-', alpha=0.6, c=c, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
-        ax.plot(vx[0], vy[0], 'o', alpha=0.6, c=c)
+        ax.plot(vx, vy, '-', alpha=0.6, color=c, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
+        ax.plot(vx[0], vy[0], 'o', alpha=0.6, color=c)
         if timestamps is True:
-            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, c=c, fontsize=8) # plot start point beginning t in s
-        ax.plot(vx[-1], vy[-1], '*', alpha=0.6, c=c) # plot end point as x
+            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, color=c, fontsize=8) # plot start point beginning t in s
+        ax.plot(vx[-1], vy[-1], '*', alpha=0.6, color=c) # plot end point as x
         last_episode = episode + 1
 
     arena = plt.Circle((0,0), 1, color='k', fill=False)
@@ -101,13 +101,13 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
     sim = simulate_with_backend(backend, model, len(locs)*len_presentation, env.timestep)
 
     n_timepoints_presentation = int(len_presentation/env.timestep)
-    print(f"each location was presented for {n_timepoints_presentation} steps")
+    print("each location was presented for {} steps".format(n_timepoints_presentation))
     values = sim.data[value_probe]
     value_evaluations = values[n_timepoints_presentation-1::n_timepoints_presentation]
-    print(f"number of sampled locations: {len(value_evaluations)}")
-    print(f"presented locations: {locs.shape}")
+    print("number of sampled locations: {}".format(len(value_evaluations)))
+    print("presented locations: {}".format(locs.shape))
 
-    print(f"x: {xx.shape}, y: {yy.shape}, values:{value_evaluations.shape}")
+    print("x: {}, y: {}, values:{}".format(xx.shape, yy.shape, value_evaluations.shape))
 
     # plot
     fig = plt.figure()
