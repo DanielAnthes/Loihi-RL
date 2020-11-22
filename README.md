@@ -9,7 +9,7 @@ Intended to be run on the Loihi chip as well.
 
 This project is intended to be run using NxSDK 0.9, which requires Python 3.5.2.
 
-The [nengo-loihi installation page](https://www.nengo.ai/nengo-loihi/v0.9.0/installation.html) suggests using miniconda, but unfortunately miniconda does not actually support 3.5.2.
+The [nengo-loihi installation page](https://www.nengo.ai/nengo-loihi/v0.9.0/installation.html) suggests using miniconda, but unfortunately miniconda does not actually contain 3.5.2 in its repository (not for Arch at least).
 
 So for me the following (using *mini* conda) does not resolve, because the package repositories do not contain the correct version:
 
@@ -62,4 +62,10 @@ This creates a `.python-version` file.
 
 From here on you can install packages with your preferred method, either straight into the 3.5.2. installation with pip, or in some virtual environment.
 
+To ensure `python` indeed refers to the one selected with `pyenv`, add the following to your `.bashrc` or `.zshrc`:
 
+```
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+```
