@@ -8,7 +8,7 @@ class ActorNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, input_node, n_neuron_out):
+    def __init__(self, n_pc, input_node, n_neuron_out, lr):
         '''
         Initialize actor net as a nengo network object
 
@@ -21,10 +21,8 @@ class ActorNet:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
             net.conn = nengo.Connection(input_node, net.output,
                                         function=lambda x: [0]*8,
-                                        #function=lambda x: np.zeros(8),
                                         solver=nengo.solvers.LstsqL2(weights=True),
-                                        learning_rule_type=Learning.TDL(learning_rate=6e-8))    # TODO write the actual TDL rule, not Oja
-                                        # learning_rule_type=nengo.Oja())                                                       # TODO if something goes wrong here take a good long look at the initial connection function
+                                        learning_rule_type=Learning.TDL(learning_rate=lr))
         self.net = net
 
 
@@ -33,7 +31,7 @@ class CriticNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, input_node, n_neuron_out):
+    def __init__(self, n_pc, input_node, n_neuron_out, lr):
         '''
         initialize critic net as a nengo network object
 
@@ -50,7 +48,7 @@ class CriticNet:
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
             net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0]) # TODO add learning here
-            net.conn.learning_rule_type = nengo.PES()
+            net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
         self.net = net
 
 
@@ -102,6 +100,9 @@ class DecisionNode:
         '''
         self.actions = actions
         self.lastaction = None
+        self.activation = np.array([np.zeros(8)])
+        self.probability = np.array([np.zeros(8)])
+
         with nengo.Network() as net:
             net.choicenode = nengo.Node(lambda t,x: self.chooseAction(x), size_in=len(actions), size_out=1)
         self.net = net
@@ -115,16 +116,18 @@ class DecisionNode:
         RETURNS:
             decision    -   integer index of choice made
         '''
+
         coin = random()
-        if coin > 0.25 and self.lastaction is not None: # repeat last action
+        if coin > .25 and self.lastaction is not None: # repeat last action
                 decision = self.lastaction
-        #pos_activation = np.sqrt(activation_in**2) # ensure positive activations TODO: replace with ReLu
-        else: 
+        else:
             pos_activation = np.maximum(activation_in, 0)
             if np.sum(pos_activation) == 0: # avoid division by zero
                 decision = choice(self.actions)
             else:
                 probs = pos_activation / np.sum(pos_activation)
+                self.activation = np.append(self.activation, [activation_in], axis=0)
+                self.probability = np.append(self.probability, [probs], axis=0)
                 decision = choice(self.actions, p=probs)
         self.lastaction = decision
         return decision

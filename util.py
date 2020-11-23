@@ -58,8 +58,57 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
-    plt.show()
 
+def plot_actions_by_activation(env, agent):
+    '''
+    action plots by activation of ensemble
+    '''
+    fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+    actions = list(range(len(env.actions)))
+    t = range(agent.DecisionMaker.activation.shape[0])
+
+    for a in actions:
+        ax.plot(np.ones(agent.DecisionMaker.activation.shape[0]) * a, t, agent.DecisionMaker.activation[:,a])
+    plt.title("Action activations as a function of time")
+    ax.set_xlabel("Action")
+    ax.set_ylabel("Time")
+    ax.set_zlabel("Activation")
+
+def plot_actions_by_probability(env, agent, descriptives=True):
+    '''
+    action plots by probability derived from activation
+    '''
+    fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+    actions = list(range(len(env.actions)))
+    t = range(agent.DecisionMaker.probability.shape[0])
+
+    for a in actions:
+        ax.plot(np.ones(agent.DecisionMaker.probability.shape[0]) * a, t, agent.DecisionMaker.probability[:,a])
+    plt.title("Action probability as a function of time")
+    ax.set_xlabel("Action")
+    ax.set_ylabel("Time")
+    ax.set_zlabel("Probability")
+
+    if descriptives:
+        print("Total actions chosen=%d (excluding repeats)" % (agent.DecisionMaker.activation.shape[0]))
+        print("Total actions taken=%d (including repeats)" % (len(env.actionmemory)))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (0, env.actionmemory.count(0), np.sum(agent.DecisionMaker.probability[:,0]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,0])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (1, env.actionmemory.count(1), np.sum(agent.DecisionMaker.probability[:,1]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,1])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (2, env.actionmemory.count(2), np.sum(agent.DecisionMaker.probability[:,2]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,2])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (3, env.actionmemory.count(3), np.sum(agent.DecisionMaker.probability[:,3]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,3])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (4, env.actionmemory.count(4), np.sum(agent.DecisionMaker.probability[:,4]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,4])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (5, env.actionmemory.count(5), np.sum(agent.DecisionMaker.probability[:,5]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,5])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (6, env.actionmemory.count(6), np.sum(agent.DecisionMaker.probability[:,6]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,6])))
+        print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (7, env.actionmemory.count(7), np.sum(agent.DecisionMaker.probability[:,7]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,7])))
+
+def plot_actions_by_decision(env):
+    '''
+    action plots by the decisions made upon probabilities
+    '''
+    plt.figure()
+    edges = np.array(range(len(env.actions)+1)) - 0.5
+    plt.hist(env.actionmemory, align='mid', bins=edges)
+    plt.title("Action distribution")
 
 def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation=0.1):
     '''

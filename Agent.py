@@ -10,7 +10,7 @@ class Mouse:
     Learns to take optimal actions in the environment by applying Actor Critic Learning
     '''
 
-    def __init__(self, env, n1, n2, sigma=0.16, act_lr=0.01, crit_lr=0.01):
+    def __init__(self, env, n1, n2, sigma=0.16, act_lr=6e-8, crit_lr=1e-4):
         '''
         TODO: agent needs error node for learning
         env - the environment to act in
@@ -28,23 +28,25 @@ class Mouse:
         # Create shared input node
         self.net = nengo.Network()
         self.net.input = nengo.Ensemble(
-            n_neurons=n_neuron_in, 
-            dimensions=n_place_cells, 
+            n_neurons=n_neuron_in,
+            dimensions=n_place_cells,
             radius=np.sqrt(n_place_cells)
         )
 
         # initialize neural net for actor
         self.Actor = ActorNet(
-            n_pc=n_place_cells, 
+            n_pc=n_place_cells,
             input_node=self.net.input,
-            n_neuron_out=200
+            n_neuron_out=200,
+            lr=act_lr
         )
         # initialize neural net for critic
         self.Critic = CriticNet(
-            n_pc=n_place_cells, 
+            n_pc=n_place_cells,
             input_node=self.net.input,
-            n_neuron_out=100
-        ) 
+            n_neuron_out=100,
+            lr=crit_lr
+        )
         self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
         self.DecisionMaker = DecisionNode(action_indices)
         self.Error = ErrorNode(self.gamma)

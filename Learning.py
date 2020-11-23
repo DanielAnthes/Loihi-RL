@@ -112,21 +112,8 @@ class SimTDL(Operator):
         delta = signals[self.delta]
 
         def step_simtdl():
-            delta[...] = self.learning_rate * dt * error * np.outer(pre_filtered, post_filtered).T
+            delta[...] = self.learning_rate * dt * error * np.outer(post_filtered, pre_filtered)
         return step_simtdl
-
-        ''' backup of Oja
-        alpha = self.learning_rate * dt
-        beta = self.beta
-
-        def step_simtdl():
-            post_squared = alpha * post_filtered * post_filtered
-            delta[...] = -beta * weights * post_squared[:,None]
-
-            delta[...] += np.outer(alpha * post_filtered, pre_filtered)
-
-        return step_simtdl
-        '''
 
 @Builder.register(TDL)
 def build_tdl(model, tdl, rule):
