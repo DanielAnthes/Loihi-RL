@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.axes3d import Axes3D
 from matplotlib import cm
 import numpy as np
 from math import ceil
@@ -25,7 +24,6 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     plt.plot(sim.trange(), sim.data[switchprobe])
     plt.title("Learning")
     plt.ylim([0,1.5])
-    plt.show()
 
 def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     '''
@@ -60,7 +58,6 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
-    plt.show()
 
 def plot_actions_by_activation(env, agent):
     '''
@@ -76,7 +73,6 @@ def plot_actions_by_activation(env, agent):
     ax.set_xlabel("Action")
     ax.set_ylabel("Time")
     ax.set_zlabel("Activation")
-    plt.show()
 
 def plot_actions_by_probability(env, agent, descriptives=True):
     '''
@@ -92,7 +88,6 @@ def plot_actions_by_probability(env, agent, descriptives=True):
     ax.set_xlabel("Action")
     ax.set_ylabel("Time")
     ax.set_zlabel("Probability")
-    plt.show()
 
     if descriptives:
         print("Total actions chosen=%d (excluding repeats)" % (agent.DecisionMaker.activation.shape[0]))
@@ -114,7 +109,6 @@ def plot_actions_by_decision(env):
     edges = np.array(range(len(env.actions)+1)) - 0.5
     plt.hist(env.actionmemory, align='mid', bins=edges)
     plt.title("Action distribution")
-    plt.show()
 
 def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation=0.1):
     '''
