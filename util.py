@@ -119,8 +119,7 @@ def plot_actions_by_probability(env, agent, descriptives=True):
     ax.set_zlabel("Probability")
 
     if descriptives:
-        print("Total actions chosen=%d (excluding repeats)" % (agent.DecisionMaker.activation.shape[0]))
-        print("Total actions taken=%d (including repeats)" % (len(env.actionmemory)))
+        print("Total actions chosen=%d" % (agent.DecisionMaker.activation.shape[0]))
         print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (0, env.actionmemory.count(0), np.sum(agent.DecisionMaker.probability[:,0]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,0])))
         print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (1, env.actionmemory.count(1), np.sum(agent.DecisionMaker.probability[:,1]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,1])))
         print("Action %d: Chosen %d times with average probability of %.2f and median p of %.2f." % (2, env.actionmemory.count(2), np.sum(agent.DecisionMaker.probability[:,2]) / agent.DecisionMaker.probability.shape[0] * 100, np.median(agent.DecisionMaker.probability[:,2])))
