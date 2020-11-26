@@ -209,17 +209,42 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
     ax.set_ylabel("Y")
     ax.set_zlabel("Value")
 
-def place_cell_activation_plot(self, agent, activations):
+def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     '''
-    place cell activation plot
+    plot a place cell, idealised vs what we simulate
     '''
+    
+    # get idealised outputs
+    activations = agent.PlaceCells.place_cell_activation(loc)
+
+    # get agent.input outputs
+    with model:
+        eval_node = nengo.Node(nengo.processes.PresentInput([loc], len_presentation)) # present each position for 0.1 seconds
+        place_cells = agent.PlaceCells.net
+        model.switch.state = 0
+        nengo.Connection(eval_node, place_cells.placecells)
+
+        value_probe = nengo.Probe(agent.net.input, synapse=len_presentation)
+
+    sim = simulate_with_backend(backend, model, len([loc]) * len_presentation, env.timestep)
+    values = sim.data[value_probe][-1,:]
+
+    # plotting
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], activations, cmap=cm.summer)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Activation")
-    plt.show()
+
+    ax_a = fig.add_subplot(1, 2, 1, projection='3d')
+    ax_a.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], activations, cmap=cm.summer)
+    ax_a.set_xlabel("X")
+    ax_a.set_ylabel("Y")
+    ax_a.set_zlabel("Activation")
+    plt.title('Idealised Place Cell')
+
+    ax_b = fig.add_subplot(1, 2, 2, projection='3d')
+    ax_b.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], values, cmap=cm.summer)
+    ax_b.set_xlabel("X")
+    ax_b.set_ylabel("Y")
+    ax_b.set_zlabel("Activation")
+    plt.title('Simulated Place Cell')
 
 def simulate_with_backend(backend, model, duration, timestep):
     if backend == 'CPU':
