@@ -9,21 +9,36 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     '''
     network plots
     '''
-    plt.figure()
-    plt.subplot(411)
-    plt.plot(sim.trange(), sim.data[errorprobe])
-    plt.title("Error Signal")
-    plt.subplot(412)
-    plt.plot(sim.trange(), sim.data[envprobe][:,:-1])
-    plt.ylim([-1.0, 1.0])
-    plt.legend(["xloc", "yloc", "reward", "done"])
-    plt.subplot(413)
-    plt.plot(sim.trange(), sim.data[envprobe][:,2])
-    plt.title("Reward")
-    plt.subplot(414)
-    plt.plot(sim.trange(), sim.data[switchprobe])
-    plt.title("Learning")
-    plt.ylim([0,1.5])
+    t = sim.trange()
+
+    fix, ax = plt.subplots(3,1, sharex=True)
+    a = ax[0]
+    a.plot(t, sim.data[errorprobe])
+    a.set_title("Error Signal")
+    
+    a = ax[1]
+    data = sim.data[envprobe][:,:-1]
+    xloc = data[:,0]
+    yloc = data[:,1]
+    reward = data[:,2]
+    done = data[:,3]
+    
+    a.set_ylim([-1.0, 1.0])
+    a.plot(t, xloc, label="xloc")
+    a.plot(t, yloc, label="yloc")
+    a.vlines(t[np.where(reward==1)], 0, 1, 
+        colors="green", linestyles="dashed", zorder=3,
+        transform=a.get_xaxis_transform(), label="reward")
+    a.vlines(t[np.where((reward==0) & (done==1))], 0, 1, 
+        colors="red", linestyles="dashed", zorder=3,
+        transform=a.get_xaxis_transform(), label="done")
+    a.legend()
+
+    a = ax[2]
+    a.plot(t, sim.data[switchprobe])
+    a.set_title("Learning")
+    a.set_ylim([0,1.5])
+    a.set_xlabel("Time")
 
 def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     '''
