@@ -117,6 +117,8 @@ class DecisionNode:
             decision    -   integer index of choice made
         '''
 
+        self.activation = np.append(self.activation, [activation_in], axis=0)
+
         coin = random()
         if coin > .25 and self.lastaction is not None: # repeat last action
                 decision = self.lastaction
@@ -126,7 +128,6 @@ class DecisionNode:
                 decision = choice(self.actions)
             else:
                 probs = pos_activation / np.sum(pos_activation)
-                self.activation = np.append(self.activation, [activation_in], axis=0)
                 self.probability = np.append(self.probability, [probs], axis=0)
                 decision = choice(self.actions, p=probs)
         self.lastaction = decision
@@ -154,6 +155,8 @@ class PlaceCells:
             ny          -   number of place cells in y direction
             diameter    -   diameter of the environment
         '''
+        self.nx = nx
+        self.ny = ny
         self.n_place_cells = nx * ny
         self.sigma = sigma
         x_coords = np.linspace(-diameter/2,diameter/2, nx)
