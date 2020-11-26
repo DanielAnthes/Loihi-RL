@@ -59,6 +59,35 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
 
+def plot_weight_evolution_3d(sim, weights_probe, title="3D Weight evolution (undefined)"):
+    '''
+    3d weight evolution plots
+    use of weights.shape[1] > 1
+    '''
+    weights = sim.data[weights_probe]
+    conns = list(range(weights.shape[1]))
+
+    fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+    for conn in conns:
+        ax.plot(np.ones(weights.shape[0]) * conn, range(weights.shape[0]), weights[:,conn])
+    plt.title(title)
+    ax.set_xlabel("Connection")
+    ax.set_ylabel("Time")
+    ax.set_zlabel("Value")
+
+def plot_weight_evolution_2d(sim, weights_probe, title="2D Weight evolution (undefined)"):
+    '''
+    2d weight evolution plots
+    use of weights.shape[1] == 1
+    '''
+    weights = sim.data[weights_probe]
+
+    plt.figure()
+    plt.plot(range(weights.shape[0]), weights[:,0])
+    plt.title(title)
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+
 def plot_actions_by_activation(env, agent):
     '''
     action plots by activation of ensemble
@@ -165,6 +194,18 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Value")
+
+def place_cell_activation_plot(self, agent, activations):
+    '''
+    place cell activation plot
+    '''
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], activations, cmap=cm.summer)
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Activation")
+    plt.show()
 
 def simulate_with_backend(backend, model, duration, timestep):
     if backend == 'CPU':

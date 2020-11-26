@@ -17,7 +17,7 @@ STEPS = 1000
 env = Maze()
 
 with nengo.Network() as model:
-    agent = Mouse(env, 23, 23, act_lr=6e-8, crit_lr=1e-4)
+    agent = Mouse(env, 23, 23, act_lr=1e-6, crit_lr=1e-6)
 
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
@@ -49,6 +49,8 @@ with nengo.Network() as model:
     errorprobe = nengo.Probe(agent.Error.net.errornode)
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
+    actorwprobe = nengo.Probe(agent.Actor.net.conn)
+    criticwprobe = nengo.Probe(agent.Critic.net.conn)
 
 sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
@@ -58,4 +60,6 @@ util.plot_trajectories(sim, env, envprobe)
 util.plot_actions_by_activation(env, agent)
 util.plot_actions_by_probability(env, agent)
 util.plot_actions_by_decision(env)
+util.plot_weight_evolution_3d(sim, actorwprobe, title="Weight evolution of place cells to actor")
+util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
 plt.show()
