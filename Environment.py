@@ -54,11 +54,6 @@ class Maze:
         self.actionmemory.append(action)
         if self.done: # check whether simulation has ended
             pn = self._get_random_start()
-            # print("mouse has reached the platform, resetting")
-            if self._goalReached():
-                print("\n\nAfter reaching goal at " + str(self.time) + "; Reset to:")
-                print(pn)
-                print("\n\n")
             self.reset(pn) # random starting position north, south, east, or west
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
