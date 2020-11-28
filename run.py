@@ -42,11 +42,12 @@ with nengo.Network() as model:
     nengo.Connection(envstate[2], agent.Error.net.errornode[0])
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
     nengo.Connection(model.switch.net.switch, agent.Error.net.errornode[2])
-    nengo.Connection(agent.Error.net.errornode, agent.Critic.net.conn.learning_rule)
-    nengo.Connection(agent.Error.net.errornode, agent.Actor.net.conn.learning_rule)
+    nengo.Connection(agent.Error.net.errornode[1], agent.Error.net.errornode[3]) # recurrent connection to save last state; TODO: synapse=0 if transmission too bad
+    nengo.Connection(agent.Error.net.errornode[0], agent.Critic.net.conn.learning_rule)
+    nengo.Connection(agent.Error.net.errornode[0], agent.Actor.net.conn.learning_rule)
 
     # add Probes
-    errorprobe = nengo.Probe(agent.Error.net.errornode)
+    errorprobe = nengo.Probe(agent.Error.net.errornode[0])
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
     actorwprobe = nengo.Probe(agent.Actor.net.conn)
@@ -54,7 +55,7 @@ with nengo.Network() as model:
 
 sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
-#util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 #util.plot_value_func(model, agent, env, BACKEND)
 #util.plot_trajectories(sim, env, envprobe)
 #util.plot_actions_by_activation(env, agent)
