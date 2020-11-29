@@ -8,7 +8,7 @@ from Agent import Mouse
 from Networks import Switch
 
 BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
-STEPS = 10
+STEPS = 1000
 
 
 # set up simulation, connect networks
@@ -57,7 +57,8 @@ try:
 except Exception as e:
     print(e)
     print("WARNING: Falling back to CPU backend")
-    sim = util.simulate_with_backend('CPU', model, duration=STEPS, timestep=env.timestep)
+    BACKEND='CPU'
+    sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 #util.plot_value_func(model, agent, env, BACKEND)
