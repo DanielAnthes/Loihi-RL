@@ -33,9 +33,9 @@ class Mouse:
             radius=2
         )
         # set network to use gaussian encoders to simulate placecells 
-        # gauss_encoder = nengo.dists.Gaussian(0,1)
-        encoders = np.array([[nengo.dists.Gaussian(0, sigma) for i in range(n1*n2)]]) # TODO this is where it breaks
-        self.net.input.encoders = encoders 
+        gauss_encoder = nengo.dists.Gaussian(0,1)
+        #encoders = np.array([[nengo.dists.Gaussian(0, sigma) for i in range(n1*n2)]]) # TODO this is where it breaks
+        self.net.input.encoders = gauss_encoder 
 
         # initialize neural net for actor
         self.Actor = ActorNet(
