@@ -1,9 +1,7 @@
+import numpy as np
+import matplotlib.pyplot as plt
 import nengo
 import util
-import numpy as np
-
-import matplotlib.pyplot as plt
-
 
 from Environment import Maze
 from Agent import Mouse
@@ -27,10 +25,10 @@ with nengo.Network() as model:
     model.switch = Switch(state=1)
 
     # compute place cell activations
-    nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
+    # nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
-    nengo.Connection(agent.PlaceCells.net.placecells, agent.net.input)
+    nengo.Connection(envstate[:2], agent.net.input)
 
     # take actor net as input to decision node
     nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
@@ -54,13 +52,13 @@ with nengo.Network() as model:
 
 sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
-#util.plot_sim(sim, envprobe, errorprobe, switchprobe)
-#util.plot_value_func(model, agent, env, BACKEND)
-#util.plot_trajectories(sim, env, envprobe)
-#util.plot_actions_by_activation(env, agent)
-#util.plot_actions_by_probability(env, agent)
-#util.plot_actions_by_decision(env)
-#util.plot_weight_evolution_3d(sim, actorwprobe, title="Weight evolution of place cells to actor")
-#util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
-util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
+util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+# util.plot_value_func(model, agent, env, BACKEND)
+util.plot_trajectories(sim, env, envprobe)
+util.plot_actions_by_activation(env, agent)
+util.plot_actions_by_probability(env, agent)
+util.plot_actions_by_decision(env)
+util.plot_weight_evolution_3d(sim, actorwprobe, title="Weight evolution of place cells to actor")
+util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
+# util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
 plt.show()

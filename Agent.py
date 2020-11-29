@@ -28,10 +28,13 @@ class Mouse:
         # Create shared input node
         self.net = nengo.Network()
         self.net.input = nengo.Ensemble(
-            n_neurons=n_neuron_in,
-            dimensions=n_place_cells,
-            radius=np.sqrt(n_place_cells)
+            n_neurons=n_place_cells,
+            dimensions=2,
+            radius=2
         )
+        # set network to use gaussian encoders to simulate placecells 
+        gauss_encoder = nengo.dists.Gaussian(0,1)
+        self.net.encoders = gauss_encoder
 
         # initialize neural net for actor
         self.Actor = ActorNet(
