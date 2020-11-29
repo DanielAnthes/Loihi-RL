@@ -11,6 +11,7 @@ BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
 STEPS = 120  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
+PLOT_TUNING = False  # Be aware that producing this plot is quite slow
 
 # set up simulation, connect networks
 env = Maze()
@@ -51,6 +52,9 @@ with nengo.Network() as model:
     switchprobe = nengo.Probe(model.switch.net.switch)
     actorwprobe = nengo.Probe(agent.Actor.net.conn)
     criticwprobe = nengo.Probe(agent.Critic.net.conn)
+
+    # Plot tuning curves
+    if PLOT_TUNING: util.plot_tuning_curves(model, agent.net.input)
 
 # CPU Fallback
 try:
