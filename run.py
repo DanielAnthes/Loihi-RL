@@ -8,7 +8,7 @@ from Agent import Mouse
 from Networks import Switch
 
 BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
-STEPS = 1000
+STEPS = 10
 
 
 # set up simulation, connect networks
