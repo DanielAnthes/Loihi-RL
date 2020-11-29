@@ -52,7 +52,14 @@ with nengo.Network() as model:
     actorwprobe = nengo.Probe(agent.Actor.net.conn)
     criticwprobe = nengo.Probe(agent.Critic.net.conn)
 
-sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
+# CPU Fallback
+try:
+    sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
+except Exception as e:
+    print(e)
+    print("WARNING: Falling back to CPU backend")
+    sim = util.simulate_with_backend('CPU', model, duration=STEPS, timestep=env.timestep)
+
 
 #util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 #util.plot_value_func(model, agent, env, BACKEND)
