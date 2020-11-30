@@ -3,10 +3,10 @@
 Before starting make sure that docker is installed and the docker daemon is running.
 After the installation you will usually have to add your user to the "docker" group in order to be able to execute commands (or use sudo).
 For ubuntu:
-
+```
 apt install docker.io docker
-sudo usermod -a -G docker $YOURUSERNAME			<-- careful here, do NOT forget -a
-
+sudo usermod -a -G docker $YOURUSERNAME`			<-- careful here, do NOT forget -a
+```
 at this point you will have to log in again to be added to the group, alternatively 
 'newgrp docker' might do the trick.
 
