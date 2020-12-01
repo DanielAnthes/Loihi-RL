@@ -14,9 +14,9 @@ class Maze:
         self.platform_loc = np.array([0,0], dtype='float') # location of platform x,y coordinates in meters
         self.mousepos = self._get_random_start()
         self.done = False # whether mouse has reached platform
-        self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
+        #self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
-        self.max_time = 30 # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 6 # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
 
@@ -31,7 +31,7 @@ class Maze:
         goalDist = abs(np.sqrt(np.sum((self.platform_loc - self.mousepos)**2)))
         return goalDist < self.platformsize / 2
 
-    def step(self, action):
+    def step(self, movement):
         '''
         takes an action and returns a new position, a reward, a done flag and
         a time stamp encoded in an array
@@ -48,16 +48,30 @@ class Maze:
                     done    - 1 if target or time limit reached 0 otherwise
                     time    - float
         '''
-        action = action.astype(int)[0]
 
         self.time += self.timestep
-        self.actionmemory.append(action)
+        #self.actionmemory.append(action)
         if self.done: # check whether simulation has ended
             pn = self._get_random_start()
             self.reset(pn) # random starting position north, south, east, or west
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
 
+        movement = movement.astype(float)[0]
+        movement = -1 if movement < -1 else 1 if movement > 1 else movement # threshold for range -1:1
+        radians = ((movement + 1) * 360) * (np.pi / 180)
+
+        len_step = self.speed * self.timestep
+        delta_pos = len_step * np.array([np.cos(radians), np.sin(radians)])
+
+        if not self._outOfBounds(self.mousepos + delta_pos): # enact only if within bounds
+            self.mousepos += delta_pos
+        #else:
+        #    delta_ref = delta_pos - 2 * (self.mousepos + delta_pos)
+        #elif not self._outOfBounds(self.mousepos - delta_pos): # else, bounce back (if possible); TODO: make this an actual bounce (reverse along one axis)
+        #    self.mousepos -= delta_pos
+
+        '''
         direction = self.actions[action]
         len_step = self.speed * self.timestep
         delta_pos = (direction / np.sqrt(np.sum(direction**2))) * len_step
@@ -65,6 +79,7 @@ class Maze:
             self.mousepos += delta_pos
         elif not self._outOfBounds(self.mousepos - delta_pos): # bounce
             self.mousepos -= delta_pos
+        '''
 
         if self._outOfBounds(self.mousepos):
             print("out of bounds!")

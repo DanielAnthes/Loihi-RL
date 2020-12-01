@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+import gif
+from pygifsicle import optimize as optim_gif
 import numpy as np
 from math import ceil
 import nengo
@@ -15,21 +17,21 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     a = ax[0]
     a.plot(t, sim.data[errorprobe])
     a.set_title("Error Signal")
-    
+
     a = ax[1]
     data = sim.data[envprobe][:,:-1]
     xloc = data[:,0]
     yloc = data[:,1]
     reward = data[:,2]
     done = data[:,3]
-    
+
     a.set_ylim([-1.0, 1.0])
     a.plot(t, xloc, label="xloc")
     a.plot(t, yloc, label="yloc")
-    a.vlines(t[np.where(reward==1)], 0, 1, 
+    a.vlines(t[np.where(reward==1)], 0, 1,
         colors="green", linestyles="dashed", zorder=3,
         transform=a.get_xaxis_transform(), label="reward")
-    a.vlines(t[np.where((reward==0) & (done==1))], 0, 1, 
+    a.vlines(t[np.where((reward==0) & (done==1))], 0, 1,
         colors="red", linestyles="dashed", zorder=3,
         transform=a.get_xaxis_transform(), label="done")
     a.legend()
@@ -186,7 +188,7 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
         model.switch.state=0 # switch off learning for plotting
 
         nengo.Connection(eval_node, place_cells.placecells)
-        nengo.Connection(place_cells.placecells, agent.net.input)
+        [nengo.Connection(place_cells.placecells[i], agent.net.input[i]) for i in range(agent.PlaceCells.n_place_cells)]
 
         value_probe = nengo.Probe(value_func.output, synapse=len_presentation)
 
@@ -213,21 +215,19 @@ def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     '''
     plot a place cell, idealised vs what we simulate
     '''
-    
-    # get idealised outputs
-    activations = agent.PlaceCells.place_cell_activation(loc)
 
-    # get agent.input outputs
     with model:
         eval_node = nengo.Node(nengo.processes.PresentInput([loc], len_presentation)) # present each position for 0.1 seconds
         place_cells = agent.PlaceCells.net
         model.switch.state = 0
         nengo.Connection(eval_node, place_cells.placecells)
 
-        value_probe = nengo.Probe(agent.net.input, synapse=len_presentation)
+        value_probe = [nengo.Probe(agent.net.input[i], synapse=0) for i in range(agent.PlaceCells.n_place_cells)]
+        pc_probe = nengo.Probe(place_cells.placecells, synapse=0)
 
     sim = simulate_with_backend(backend, model, len([loc]) * len_presentation, env.timestep)
-    values = sim.data[value_probe][-1,:]
+    values = np.squeeze(np.array([sim.data[value_probe[i]][-1,:] for i in range(agent.PlaceCells.n_place_cells)]))
+    activations = sim.data[pc_probe][-1,:]
 
     # plotting
     fig = plt.figure()
@@ -237,14 +237,59 @@ def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     ax_a.set_xlabel("X")
     ax_a.set_ylabel("Y")
     ax_a.set_zlabel("Activation")
-    plt.title('Idealised Place Cell')
+    plt.title('Idealised activation: ' + str(loc))
 
     ax_b = fig.add_subplot(1, 2, 2, projection='3d')
     ax_b.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], values, cmap=cm.summer)
     ax_b.set_xlabel("X")
     ax_b.set_ylabel("Y")
     ax_b.set_zlabel("Activation")
-    plt.title('Simulated Place Cell')
+    plt.title('Simulated activation: ' + str(loc))
+
+def plot_place_cell_path(model, agent, env, backend, path, len_presentation=0.1, name="place_cell_path.gif", duration=10):
+    with model:
+        eval_node = nengo.Node(nengo.processes.PresentInput(path.T, len_presentation)) # present each position for 0.1 seconds
+        place_cells = agent.PlaceCells.net
+        model.switch.state = 0
+        nengo.Connection(eval_node, place_cells.placecells)
+
+        value_probe = [nengo.Probe(agent.net.input[i], synapse=0) for i in range(agent.PlaceCells.n_place_cells)]
+        pc_probe = nengo.Probe(place_cells.placecells, synapse=0)
+
+    sim = simulate_with_backend(backend, model, len(path.T) * len_presentation, env.timestep)
+    values = np.squeeze(np.array([sim.data[value_probe[i]][:,:] for i in range(agent.PlaceCells.n_place_cells)])).T
+    activations = sim.data[pc_probe][:,:]
+
+    @gif.frame
+    def place_cell_frame(agent, activations, values, t):
+        fig = plt.figure()
+
+        ax_a = fig.add_subplot(1, 2, 1, projection='3d')
+        ax_a.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], activations, cmap=cm.summer)
+        ax_a.set_zlim(0, 1)
+        ax_a.set_xlabel("X")
+        ax_a.set_ylabel("Y")
+        ax_a.set_zlabel("Activation")
+        plt.title('Idealised activation')
+
+        ax_b = fig.add_subplot(1, 2, 2, projection='3d')
+        ax_b.plot_trisurf(agent.PlaceCells.cell_locs[0,:], agent.PlaceCells.cell_locs[1,:], values, cmap=cm.summer)
+        ax_b.set_zlim(0, 1)
+        ax_b.set_xlabel("X")
+        ax_b.set_ylabel("Y")
+        ax_b.set_zlabel("Activation")
+        plt.title('Simulated activation')
+
+        fig.suptitle('t=' + str(t))
+
+    frames = list()
+
+    for i in range(activations.shape[0]):
+        print("Frame %d of %d" % (i, activations.shape[0]), end='\r')
+        frames.append(place_cell_frame(agent, activations[i,:], values[i,:], i))
+    print("Frames created successfully, saving.")
+
+    gif.save(frames, name, duration=duration)
 
 def simulate_with_backend(backend, model, duration, timestep):
     if backend == 'CPU':
