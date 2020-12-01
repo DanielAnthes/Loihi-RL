@@ -14,9 +14,9 @@ class Maze:
         self.platform_loc = np.array([0,0], dtype='float') # location of platform x,y coordinates in meters
         self.mousepos = self._get_random_start()
         self.done = False # whether mouse has reached platform
-        #self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
+        self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
-        self.max_time = 6 # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 30 # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
 
@@ -57,6 +57,7 @@ class Maze:
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
 
+        '''
         movement = movement.astype(float)[0]
         movement = -1 if movement < -1 else 1 if movement > 1 else movement # threshold for range -1:1
         radians = ((movement + 1) * 360) * (np.pi / 180)
@@ -70,8 +71,9 @@ class Maze:
         #    delta_ref = delta_pos - 2 * (self.mousepos + delta_pos)
         #elif not self._outOfBounds(self.mousepos - delta_pos): # else, bounce back (if possible); TODO: make this an actual bounce (reverse along one axis)
         #    self.mousepos -= delta_pos
-
         '''
+
+        action = movement.astype(int)[0]
         direction = self.actions[action]
         len_step = self.speed * self.timestep
         delta_pos = (direction / np.sqrt(np.sum(direction**2))) * len_step
@@ -79,7 +81,7 @@ class Maze:
             self.mousepos += delta_pos
         elif not self._outOfBounds(self.mousepos - delta_pos): # bounce
             self.mousepos -= delta_pos
-        '''
+
 
         if self._outOfBounds(self.mousepos):
             print("out of bounds!")

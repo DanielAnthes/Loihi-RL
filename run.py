@@ -9,15 +9,15 @@ from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
-BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
-STEPS = 0.1
+BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
+STEPS = 600
 
 
 # set up simulation, connect networks
 env = Maze()
 
 with nengo.Network() as model:
-    agent = Mouse(env, 23, 23, act_lr=1e-6, crit_lr=1e-6)
+    agent = Mouse(env, 23, 23, act_lr=1e-6, crit_lr=1e-8)
 
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
@@ -27,7 +27,7 @@ with nengo.Network() as model:
     model.switch = Switch(state=1)
 
     # compute place cell activations
-    #nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
+    nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
     [nengo.Connection(agent.PlaceCells.net.placecells[i], agent.net.input[i], synapse=0) for i in range(agent.PlaceCells.n_place_cells)]
@@ -35,13 +35,13 @@ with nengo.Network() as model:
     #nengo.Connection(envstate[:2], agent.net.input)
 
     # take actor net as input to decision node
-    #nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
+    nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode, synapse=0)
 
     # execute action in environment
-    #nengo.Connection(agent.DecisionMaker.net.choicenode, envstate, synapse=0)
+    nengo.Connection(agent.DecisionMaker.net.choicenode, envstate, synapse=0)
 
     # actor projects at environment
-    nengo.Connection(agent.Actor.net.output, envstate)
+    #nengo.Connection(agent.Actor.net.output, envstate, synapse=0)
 
     # connect error node
     nengo.Connection(envstate[2], agent.Error.net.errornode[0])
@@ -69,9 +69,9 @@ except Exception as e:
     sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
 
-#util.plot_sim(sim, envprobe, errorprobe, switchprobe)
-#util.plot_value_func(model, agent, env, BACKEND)
-#util.plot_trajectories(sim, env, envprobe)
+util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+util.plot_value_func(model, agent, env, BACKEND)
+util.plot_trajectories(sim, env, envprobe)
 #util.plot_actions_by_activation(env, agent)
 #util.plot_actions_by_probability(env, agent)
 #util.plot_actions_by_decision(env)
@@ -79,5 +79,5 @@ except Exception as e:
 #util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
 #util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
 #util.plot_place_cell_path(model, agent, env, BACKEND, np.array([np.linspace(-1, 1, 200), np.zeros(200)]))
-util.plot_place_cell_path(model, agent, env, BACKEND, np.array([np.linspace(-1, 1, 100), np.zeros(100)]), len_presentation=env.timestep)
+#util.plot_place_cell_path(model, agent, env, BACKEND, np.array([np.linspace(-1, 1, 100), np.zeros(100)]), len_presentation=env.timestep)
 plt.show()

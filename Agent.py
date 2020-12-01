@@ -21,7 +21,7 @@ class Mouse:
         n_place_cells = n1*n2
         n_neuron_in = 2000
 
-        #action_indices = list(range(len(env.actions)))
+        action_indices = list(range(len(env.actions)))
         self.env = env
         self.gamma = 0.95 # TODO given in paper? could not find it, discount factor
 
@@ -56,5 +56,5 @@ class Mouse:
         )
 
         self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
-        #self.DecisionMaker = DecisionNode(action_indices)
+        self.DecisionMaker = DecisionNode(action_indices)
         self.Error = ErrorNode(self.gamma)

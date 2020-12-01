@@ -18,9 +18,10 @@ class ActorNet:
                 n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
-            #net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1, radius=1)
-            net.conn = [nengo.Connection(input_node[i], net.output, function=lambda x: [0], solver=nengo.solvers.LstsqL2(weights=True), learning_rule_type=Learning.TDL(learning_rate=lr)) for i in range(len(input_node))]
+            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
+            #net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1, radius=1)
+            #net.conn = [nengo.Connection(input_node[i], net.output, function=lambda x: [0], solver=nengo.solvers.LstsqL2(weights=True), learning_rule_type=Learning.TDL(learning_rate=lr)) for i in range(len(input_node))]
+            net.conn = [nengo.Connection(input_node[i], net.output, function=lambda x: [0]*8, solver=nengo.solvers.LstsqL2(weights=True), learning_rule_type=Learning.TDL(learning_rate=lr)) for i in range(len(input_node))]
             '''net.conn = nengo.Connection(input_node[:], net.output,
                                         function=lambda x: np.random.random(1),
                                         solver=nengo.solvers.LstsqL2(weights=True),
