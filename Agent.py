@@ -19,7 +19,7 @@ class Mouse:
         total number of place cells will be n1 x n2
         '''
         n_place_cells = n1*n2
-        n_neuron_in = 2000
+        n_neuron_in = 500
 
         action_indices = list(range(len(env.actions)))
         self.env = env

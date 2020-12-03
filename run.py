@@ -27,7 +27,7 @@ with nengo.Network() as model:
     model.switch = Switch(state=1)
 
     # compute place cell activations
-    # nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
+    nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
     nengo.Connection(envstate[:2], agent.net.input)
