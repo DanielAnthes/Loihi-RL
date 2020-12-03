@@ -82,7 +82,8 @@ class ErrorNode:
         if state is None:
             return [0, value] # no error without prediction
 
-        delta = reward + self.discount*value - state
+        delta = reward if reward > 0 else self.discount*value - state
+        value = 0 if reward > 0 else value # fix bleeding into novel episodes
 
         return [delta*switch, value]
 
