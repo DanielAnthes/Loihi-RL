@@ -1,22 +1,23 @@
 import numpy as np
 import nengo
 
+
 class Maze:
     '''
     Environment Class, interactions are defined by reset and step
     '''
     def __init__(self):
         # coordinates given in meters, (0,0) marks center of the maze
-        self.speed = 0.3 # m/s speed of the mouse
-        self.timestep = 0.01 # seconds, discrete time steps
-        self.diameter = 2 # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
+        self.speed = 0.3  # m/s speed of the mouse
+        self.timestep = 0.01  # seconds, discrete time steps
+        self.diameter = 2  # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
         self.platformsize = 0.1 # meters, diameter of platform
-        self.platform_loc = np.array([0,0], dtype='float') # location of platform x,y coordinates in meters
+        self.platform_loc = np.array([0,0], dtype='float')  # location of platform x,y coordinates in meters
         self.mousepos = self._get_random_start()
-        self.done = False # whether mouse has reached platform
+        self.done = False  # whether mouse has reached platform
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         self.starting_pos = np.array([[0,1],[1,0],[0,-1],[-1,0]], dtype='float') # possible starting locations TODO: this should probably be relted to diameter to avoid invalid starting pos
-        self.max_time = 30 # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 30  # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
 
@@ -52,9 +53,9 @@ class Maze:
 
         self.time += self.timestep
         self.actionmemory.append(action)
-        if self.done: # check whether simulation has ended
+        if self.done:  # check whether simulation has ended
             pn = self._get_random_start()
-            self.reset(pn) # random starting position north, south, east, or west
+            self.reset(pn)  # random starting position
             returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
 
@@ -63,7 +64,7 @@ class Maze:
         delta_pos = (direction / np.sqrt(np.sum(direction**2))) * len_step
         if not self._outOfBounds(self.mousepos + delta_pos): # if mouse would go out of bounds bounce back
             self.mousepos += delta_pos
-        elif not self._outOfBounds(self.mousepos - delta_pos): # bounce
+        elif not self._outOfBounds(self.mousepos - delta_pos):  # bounce
             self.mousepos -= delta_pos
 
         if self._outOfBounds(self.mousepos):
