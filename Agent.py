@@ -47,6 +47,6 @@ class Mouse:
             n_neuron_out=100,
             lr=crit_lr
         )
-        self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
+        # self.PlaceCells = PlaceCells(n1, n2, env.diameter, sigma)
         self.DecisionMaker = DecisionNode(action_indices)
         self.Error = ErrorNode(self.gamma)
