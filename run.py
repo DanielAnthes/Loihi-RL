@@ -19,15 +19,13 @@ env = Maze()
 with nengo.Network() as model:
     agent = Mouse(env, N_PCX, N_PCY, act_lr=1e-6, crit_lr=1e-6)
 
-    # TODO add error node
-    # environment node, step function expects integer so need to cast from float
     envstate = nengo.Node(lambda time, action: env.step(action), size_in=1, size_out=5)
 
     # add node to control learning
     model.switch = Switch(state=1)
 
     # compute place cell activations
-    nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
+    # nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
     nengo.Connection(envstate[:2], agent.net.input)

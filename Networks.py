@@ -39,15 +39,10 @@ class CriticNet:
             n_pc            -   number of place cells
             n_neuron_in     -   number of neurons in Ensemble encoding input
             n_neuron_out    -   number of neurons in Ensemble encoding output
-
-        Note:   Radius of input population is set to sqrt(n_pc). The reasoning behind this is that
-                the maximum activation of each place cell is 1 (exp(0)=1). However, this becomes a
-                large value if many place cells are used. Since it is impossible for all place cells to
-                give input value 1 at the same time this may be wasteful, choose smaller radius?
         '''
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0]) # TODO add learning here
+            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
         self.net = net
 
@@ -56,8 +51,8 @@ class ErrorNode:
     '''
     Computes delta as described in Foster et al.
     To avoid recomputation of the states and to enable error feedback during simulation
-    To do this keep value prediction at time t: V_t as the state of the Error Node
-    on receiving the reward and new prediction V_t+1 computes delta as:
+    To do this we use a self loop feeding back the previous value prediction V and  use
+    it with the new prediction V_t+1 to compute delta as:
 
         delta = Reward + discount*V_t+1 - V_t
 
@@ -65,11 +60,10 @@ class ErrorNode:
     TODO check whether this still works or is complete nonsense
     '''
     def __init__(self, discount):
-        self.state = None
         self.discount = discount
-
+ 
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t,input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
 
         self.net = net
 
@@ -80,10 +74,10 @@ class ErrorNode:
         state = input[3]
 
         if state is None:
-            return [0, value] # no error without prediction
+            return [0, value]  # no error without prediction
 
         delta = reward if reward > 0 else self.discount*value - state
-        value = 0 if reward > 0 else value # fix bleeding into novel episodes
+        value = 0 if reward > 0 else value  # fix bleeding into novel episodes
 
         return [delta*switch, value]
 
@@ -123,11 +117,11 @@ class DecisionNode:
         self.activation = np.append(self.activation, [activation_in], axis=0)
 
         coin = random()
-        if coin > .25 and self.lastaction is not None: # repeat last action
+        if coin > .25 and self.lastaction is not None:  # repeat last action
                 decision = self.lastaction
         else:
             pos_activation = np.maximum(activation_in, 0)
-            if np.sum(pos_activation) == 0: # avoid division by zero
+            if np.sum(pos_activation) == 0:  # avoid division by zero
                 decision = choice(self.actions)
             else:
                 probs = pos_activation / np.sum(pos_activation)
@@ -137,6 +131,7 @@ class DecisionNode:
         return decision
 
 
+# DEPRECATED
 class PlaceCells:
     '''
     TODO: currently assumed "given" and implemented as Node, opportunity to extend the simulation here
@@ -190,6 +185,7 @@ class PlaceCells:
         denominator = 2 * self.sigma**2
         activations = np.exp(-(enumerator / denominator))
         return activations
+
 
 class Switch:
     def __init__(self, state=1):
