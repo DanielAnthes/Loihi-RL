@@ -4,6 +4,7 @@ from matplotlib import cm
 import numpy as np
 from math import ceil
 import nengo
+from nengo.utils.ensemble import tuning_curves  # another option is response_curves 
 
 def plot_sim(sim, envprobe, errorprobe, switchprobe):
     '''
@@ -212,6 +213,7 @@ def plot_value_func(model, agent, env, backend, eval_points=50, len_presentation
 def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     '''
     plot a place cell, idealised vs what we simulate
+    N.B. does not work anymore with the Guassian encoders
     '''
     
     # get idealised outputs
@@ -245,6 +247,22 @@ def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     ax_b.set_ylabel("Y")
     ax_b.set_zlabel("Activation")
     plt.title('Simulated Place Cell')
+
+def plot_tuning_curves(model, ensemble):
+    with nengo.Simulator(model) as sim:
+        eval_points, activities = tuning_curves(ensemble, sim)
+
+    plt.figure(figsize=(8, 8))
+    ax = plt.subplot(111, projection="3d")
+    ax.set_title("Tuning curves")
+    for i in range(ensemble.n_neurons):
+        ax.plot_surface(
+            eval_points.T[0], eval_points.T[1], activities.T[i], cmap=plt.cm.autumn
+        )
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("Firing rate (Hz)")
+    plt.show()
 
 def simulate_with_backend(backend, model, duration, timestep):
     if backend == 'CPU':

@@ -1,23 +1,23 @@
+import numpy as np
+import matplotlib.pyplot as plt
 import nengo
 import util
-import numpy as np
-
-import matplotlib.pyplot as plt
-
 
 from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
 BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
-STEPS = 1
-
+STEPS = 120  # each trial is max 30 seconds
+N_PCX = 23  # N place cells in X direction
+N_PCY = 23  # ibid. in Y direction
+PLOT_TUNING = False  # Be aware that producing this plot is quite slow
 
 # set up simulation, connect networks
 env = Maze()
 
 with nengo.Network() as model:
-    agent = Mouse(env, 23, 23, act_lr=1e-6, crit_lr=1e-6)
+    agent = Mouse(env, N_PCX, N_PCY, act_lr=1e-6, crit_lr=1e-6)
 
     # TODO add error node
     # environment node, step function expects integer so need to cast from float
@@ -30,7 +30,7 @@ with nengo.Network() as model:
     nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
 
     # place cells give input to actor and critic
-    nengo.Connection(agent.PlaceCells.net.placecells, agent.net.input)
+    nengo.Connection(envstate[:2], agent.net.input)
 
     # take actor net as input to decision node
     nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
@@ -53,6 +53,9 @@ with nengo.Network() as model:
     actorwprobe = nengo.Probe(agent.Actor.net.conn)
     criticwprobe = nengo.Probe(agent.Critic.net.conn)
 
+    # Plot tuning curves
+    if PLOT_TUNING: util.plot_tuning_curves(model, agent.net.input)
+
 # CPU Fallback
 try:
     sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
@@ -62,14 +65,13 @@ except Exception as e:
     BACKEND='CPU'
     sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
-
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 #util.plot_value_func(model, agent, env, BACKEND)
-#util.plot_trajectories(sim, env, envprobe)
+util.plot_trajectories(sim, env, envprobe)
 #util.plot_actions_by_activation(env, agent)
 #util.plot_actions_by_probability(env, agent)
 #util.plot_actions_by_decision(env)
 #util.plot_weight_evolution_3d(sim, actorwprobe, title="Weight evolution of place cells to actor")
 #util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
-util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
+#util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
 plt.show()

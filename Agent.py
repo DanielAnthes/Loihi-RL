@@ -19,7 +19,7 @@ class Mouse:
         total number of place cells will be n1 x n2
         '''
         n_place_cells = n1*n2
-        n_neuron_in = 2000
+        n_neuron_in = 500
 
         action_indices = list(range(len(env.actions)))
         self.env = env
@@ -28,9 +28,9 @@ class Mouse:
         # Create shared input node
         self.net = nengo.Network()
         self.net.input = nengo.Ensemble(
-            n_neurons=n_neuron_in,
-            dimensions=n_place_cells,
-            radius=np.sqrt(n_place_cells)
+            n_neurons=n_place_cells,
+            dimensions=2,
+            radius=2
         )
 
         # initialize neural net for actor
