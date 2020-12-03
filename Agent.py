@@ -33,12 +33,6 @@ class Mouse:
             radius=2
         )
 
-        # Define preferred locations of place cells
-        X, Y = np.mgrid[-1:1:complex(0,n1), -1:1:complex(0,n2)]
-        preferred_locations = [ (x, y) for (x,y) in zip(X.flatten(), Y.flatten())]
-        gauss_encoders = [ [nengo.dists.Gaussian(x, sigma).sample(1)[0], nengo.dists.Gaussian(y, sigma).sample(1)[0] ] for (x, y) in preferred_locations]
-        self.net.input.encoders = gauss_encoders
-
         # initialize neural net for actor
         self.Actor = ActorNet(
             n_pc=n_place_cells,
