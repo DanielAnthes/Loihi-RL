@@ -13,12 +13,13 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 class TestEnv:
 
     def __init__(self):
-        self.stepsize = 0.05
+        self.stepsize = 0.0002  # with standard dt and track length 2 this
+                                # leads to episode length of 10 seconds
         self.pathlen = 2
         self.agentpos = 0
         self.reward = 1
         self.goalcounter = 0
-        self.reset = 10
+        self.reset = 1000
 
     def step(self):
         self.agentpos += self.stepsize
@@ -43,8 +44,8 @@ env = TestEnv()
 with nengo.Network() as net:
     envnode = nengo.Node(lambda t: env.step(), size_out=2)
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
-    critic = CriticNet(in_ens, n_neuron_out=100, lr=1e-4)
-    error =  ErrorNode(discount=0.9)
+    critic = CriticNet(in_ens, n_neuron_out=100, lr=1e-5)
+    error =  ErrorNode(discount=0.9995)  # seems like a reasonable value to have a reward gradient over the entire episode
     switch =  Switch(1)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
