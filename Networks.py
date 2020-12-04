@@ -31,7 +31,7 @@ class CriticNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, input_node, n_neuron_out, lr):
+    def __init__(self, input_node, n_neuron_out, lr):
         '''
         initialize critic net as a nengo network object
 
