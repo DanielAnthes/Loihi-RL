@@ -56,7 +56,7 @@ class Maze:
         if self.done:  # check whether simulation has ended
             pn = self._get_random_start()
             self.reset(pn)  # random starting position
-            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
+            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time, 1])
             return returnarr
 
         direction = self.actions[action]
@@ -77,7 +77,7 @@ class Maze:
         doneval = 1 if self.done else 0
 
         # pack return in an array
-        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time])
+        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time, 0])
         return returnarr
 
     def reset(self, mousepos=np.array([0,1], dtype='float')):

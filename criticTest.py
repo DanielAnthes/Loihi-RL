@@ -1,4 +1,3 @@
-# %%
 import matplotlib.pyplot as plt
 import numpy as np
 import nengo
@@ -22,18 +21,21 @@ class TestEnv:
         self.reset = 1000
 
     def step(self):
+        reset = 0
         self.agentpos += self.stepsize
         if self.goalReached():
             reward = self.reward
             if self.goalcounter == self.reset:
                 self.agentpos = 0
                 self.goalcounter = 0
+                reset = 1
             else:
                 self.goalcounter += 1
                 self.agentpos = self.pathlen
         else:
             reward = 0
-        return np.array([self.agentpos, reward])
+            reset = 0
+        return np.array([self.agentpos, reward, reset])
     
     def goalReached(self):
         return abs(self.agentpos - self.pathlen) < self.stepsize
@@ -42,9 +44,9 @@ class TestEnv:
 env = TestEnv()
 
 with nengo.Network() as net:
-    envnode = nengo.Node(lambda t: env.step(), size_out=2)
+    envnode = nengo.Node(lambda t: env.step(), size_out=3)
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
-    critic = CriticNet(in_ens, n_neuron_out=100, lr=1e-5)
+    critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
     error =  ErrorNode(discount=0.9995)  # seems like a reasonable value to have a reward gradient over the entire episode
     switch =  Switch(1)  # needed for compatibility with error implementation
 
@@ -56,6 +58,7 @@ with nengo.Network() as net:
     nengo.Connection(critic.net.output, error.net.errornode[1])
     nengo.Connection(switch.net.switch, error.net.errornode[2])
     nengo.Connection(error.net.errornode[1], error.net.errornode[3])
+    nengo.Connection(envnode[2], error.net.errornode[4])
     
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
@@ -69,7 +72,6 @@ with nengo.Network() as net:
 sim = simulate_with_backend('GPU', net, 100, 0.001) # use default dt
 
 
-# %%
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
 state = sim.data[envprobe][:,0]
@@ -77,7 +79,6 @@ reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 conndata = sim.data[learnprobe]
 
-# %%
 plt.figure(figsize=(12,8))
 plt.subplot(211)
 plt.plot(t, state, label='position')

@@ -63,7 +63,7 @@ class ErrorNode:
         self.discount = discount
  
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=5, size_out=2)
 
         self.net = net
 
@@ -72,14 +72,16 @@ class ErrorNode:
         value = input[1]
         switch = input[2]
         state = input[3]
+        reset = input[4]
 
         if state is None:
             return [0, value]  # no error without prediction
 
         delta = reward + self.discount*value - state
-        # value = 0 if reward > 0 else value  # fix bleeding into novel episodes
-
-        return [delta*switch, value]
+        if reset:
+            return [0,0]
+        else:
+            return [delta*switch, value]
 
 
 class DecisionNode:
