@@ -66,7 +66,7 @@ with nengo.Network() as net:
     errorprobe = nengo.Probe(error.net.errornode)
     learnprobe = nengo.Probe(critic.net.conn)
 
-sim = simulate_with_backend('GPU', net, 40, 0.1)
+sim = simulate_with_backend('GPU', net, 100, 0.001) # use default dt
 
 
 # %%
