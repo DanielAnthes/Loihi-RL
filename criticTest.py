@@ -58,7 +58,7 @@ with nengo.Network() as net:
     nengo.Connection(error.net.errornode[1], error.net.errornode[3])
     
     # error to critic
-    nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule)
+    nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transpose=-1)
 
     # Probes
     envprobe = nengo.Probe(envnode)

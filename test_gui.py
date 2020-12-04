@@ -38,7 +38,7 @@ class ErrorNode:
         self.discount = discount
  
         with nengo.Network(label="error") as net:
-            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=3)
 
         self.net = net
 
@@ -51,10 +51,10 @@ class ErrorNode:
         if state is None:
             return [0, value]  # no error without prediction
 
-        delta = reward if reward > 0 else self.discount*value - state
+        delta = reward + self.discount*value - state
         # value = 0 if reward > 0 else value  # fix bleeding into novel episodes
 
-        return [delta*switch, value]
+        return [delta*switch, value, value]
 
 
 class Switch:
@@ -99,8 +99,8 @@ env = TestEnv()
 with nengo.Network() as model:
     envnode = nengo.Node(lambda t: env.step(), size_out=2)
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
-    critic = CriticNet(in_ens, n_neuron_out=100, lr=1e-4)
-    error =  ErrorNode(discount=0.9)
+    critic = CriticNet(in_ens, n_neuron_out=100, lr=1e-5)
+    error =  ErrorNode(discount=0.9995)
     switch =  Switch(1)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
@@ -113,8 +113,4 @@ with nengo.Network() as model:
     nengo.Connection(error.net.errornode[1], error.net.errornode[3])
     
     # error to critic
-    nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule)
-
-
-    
-
+    nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
