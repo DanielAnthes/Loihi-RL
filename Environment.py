@@ -64,8 +64,6 @@ class Maze:
         delta_pos = (direction / np.sqrt(np.sum(direction**2))) * len_step
         if not self._outOfBounds(self.mousepos + delta_pos): # if mouse would go out of bounds bounce back
             self.mousepos += delta_pos
-        elif not self._outOfBounds(self.mousepos - delta_pos):  # bounce
-            self.mousepos -= delta_pos
 
         if self._outOfBounds(self.mousepos):
             print("out of bounds!")
