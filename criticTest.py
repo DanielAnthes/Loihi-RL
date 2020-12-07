@@ -54,11 +54,11 @@ with nengo.Network() as net:
 
 
     # error node connections
-    nengo.Connection(envnode[1], error.net.errornode[0])
-    nengo.Connection(critic.net.output, error.net.errornode[1])
-    nengo.Connection(switch.net.switch, error.net.errornode[2])
-    nengo.Connection(error.net.errornode[1], error.net.errornode[3])
-    nengo.Connection(envnode[2], error.net.errornode[4])
+    nengo.Connection(envnode[1], error.net.errornode[0], synapse=0) # reward connection
+    nengo.Connection(critic.net.output, error.net.errornode[1], synapse=0) # value prediction
+    nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0) # learning switch
+    nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0) # feed value into next step
+    nengo.Connection(envnode[2], error.net.errornode[4], synapse=0) # feed reward, synapse 0 to retain reward==1
     
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
@@ -69,9 +69,9 @@ with nengo.Network() as net:
     errorprobe = nengo.Probe(error.net.errornode)
     learnprobe = nengo.Probe(critic.net.conn)
 
-sim = simulate_with_backend('GPU', net, 100, 0.001) # use default dt
+sim = simulate_with_backend('GPU', net, 80, 0.001) # use default dt
 
-
+import pandas as pd
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
 state = sim.data[envprobe][:,0]
@@ -79,26 +79,29 @@ reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 conndata = sim.data[learnprobe]
 
-plt.figure(figsize=(12,8))
-plt.subplot(211)
+plt.figure(figsize=(12,10))
+plt.subplot(411)
 plt.plot(t, state, label='position')
 plt.plot(t, reward, label='reward')
 plt.plot(t, criticout, label='value')
 plt.plot(t, conndata, label='delta')
 plt.legend()
-plt.subplot(212)
+plt.subplot(412)
 plt.plot(t, sim_error, label='error')
 plt.legend()
 
-plt.figure()
+plt.subplot(413)
 plt.title('error node inputs')
 plt.plot(t, reward, label='reward')
-plt.plot(t, criticout, label='value')
+# plt.plot(t, criticout, label='value')
+plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
 plt.plot(t, sim_error, label='error')
-plt.plot(t, sim.data[errorprobe][:,1], label='state')
+# plt.plot(t, sim.data[errorprobe][:,1], label='state')
+plt.plot(t, pd.Series(error.statemem).rolling(5).mean(), label="state", alpha=.5)
+# plt.plot(t, sim.data[envprobe][:,2], label='reset')
 plt.legend()
 
-plt.figure()
+plt.subplot(414)
 plt.plot(t, criticout)
 plt.title("Critic Value Prediction")
 plt.show()

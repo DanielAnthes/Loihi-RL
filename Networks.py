@@ -69,17 +69,23 @@ class ErrorNode:
 
         self.net = net
 
+        self.valuemem = []
+        self.statemem = []
+
     def update(self, input):
         reward = input[0]
         value = input[1]
         switch = input[2]
         state = input[3]
-        reset = input[4]
+        reset = input[4].astype(int)  
 
         if state is None:
             return [0, value]  # no error without prediction
 
         delta = reward + self.discount*value - state
+        self.valuemem.append(value)
+        self.statemem.append(state)
+
         if reset:
             return [0,0]
         else:
