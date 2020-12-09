@@ -113,6 +113,6 @@ plt.legend()
 plt.subplot(414)
 plt.plot(t, criticout)
 plt.title("Critic Value Prediction")
+
+plt.tight_layout()
 plt.show()
-
-
