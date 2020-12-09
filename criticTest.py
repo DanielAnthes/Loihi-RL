@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import nengo
-import nengo_ocl
 from Networks import CriticNet, ErrorNode, Switch
 from util import simulate_with_backend
 
@@ -42,12 +41,16 @@ class TestEnv:
 
 
 env = TestEnv()
+BACKEND = 'GPU'
+dt = 0.001
+duration = 80
+discount = 0.9995
 
 with nengo.Network() as net:
     envnode = nengo.Node(lambda t: env.step(), size_out=3)
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
-    error =  ErrorNode(discount=0.9995)  # seems like a reasonable value to have a reward gradient over the entire episode
+    error =  ErrorNode(discount=discount)  # seems like a reasonable value to have a reward gradient over the entire episode
     switch =  Switch(1)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
@@ -69,7 +72,13 @@ with nengo.Network() as net:
     errorprobe = nengo.Probe(error.net.errornode)
     learnprobe = nengo.Probe(critic.net.conn)
 
-sim = simulate_with_backend('GPU', net, 80, 0.001) # use default dt
+try:
+    sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
+except Exception as e:
+    print(e)
+    print("WARNING: Falling back to CPU backend")
+    sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
+
 
 import pandas as pd
 t = sim.trange()
