@@ -17,7 +17,7 @@ class TestEnv:
         self.agentpos = 0
         self.reward = 1
         self.goalcounter = 0
-        self.reset = 1000
+        self.reset = 500
 
     def step(self):
         reset = 0
