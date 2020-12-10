@@ -27,15 +27,17 @@ class TestEnv:
             if self.goalcounter == self.reset:
                 self.agentpos = 0
                 self.goalcounter = 0
-                reset = 1
             else:
                 self.goalcounter += 1
                 self.agentpos = self.pathlen
+
+                if self.goalcounter == self.reset:
+                    reset = 1
         else:
             reward = 0
             reset = 0
         return np.array([self.agentpos, reward, reset])
-    
+
     def goalReached(self):
         return abs(self.agentpos - self.pathlen) < self.stepsize
 
@@ -62,7 +64,7 @@ with nengo.Network() as net:
     nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0) # learning switch
     nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0) # feed value into next step
     nengo.Connection(envnode[2], error.net.errornode[4], synapse=0) # feed reward, synapse 0 to retain reward==1
-    
+
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
 
