@@ -279,7 +279,7 @@ def simulate_with_backend(backend, model, duration, timestep):
 
     elif backend == 'LOIHI':
         import nengo_loihi
-        sim = nengo_loihi.Simulator(model, dt=timestep)
+        sim = nengo_loihi.Simulator(model, dt=timestep, target='loihi')
 
     with sim:
         sim.run(duration)
