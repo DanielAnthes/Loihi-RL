@@ -40,6 +40,7 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     a.set_title("Learning")
     a.set_ylim([0,1.5])
     a.set_xlabel("Time")
+    return fix
 
 def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     '''

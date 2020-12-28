@@ -12,7 +12,6 @@ STEPS = 40  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
-
 # set up simulation, connect networks
 env = Maze()
 
@@ -65,7 +64,8 @@ except Exception as e:
 
 cdat = sim.data[criticprobe]
 print(cdat.shape)
-util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+fig = util.plot_sim(sim, envprobe, errorprobe, switchprobe)
+fig.savefig("sim.png")
 #util.plot_value_func(model, agent, env, BACKEND)
 fig = util.plot_trajectories(sim, env, envprobe, cdat)
 fig.savefig("trajectory.png")
