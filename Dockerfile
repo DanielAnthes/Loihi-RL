@@ -4,6 +4,7 @@ RUN echo "install python" && \
 	apt-get -y update && \
 	apt-get -y install python3 && \
 	apt-get -y install curl && \
+	apt-get -y install git && \
 	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 	/usr/bin/python3 get-pip.py && \
 	rm get-pip.py && \
