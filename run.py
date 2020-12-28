@@ -8,7 +8,7 @@ from Agent import Mouse
 from Networks import Switch
 
 BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
-STEPS = 400  # each trial is max 30 seconds
+STEPS = 200  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
@@ -48,9 +48,9 @@ with nengo.Network() as model:
     errorprobe = nengo.Probe(agent.Error.net.errornode[0])
     envprobe = nengo.Probe(envstate)
     switchprobe = nengo.Probe(model.switch.net.switch)
-    actorwprobe = nengo.Probe(agent.Actor.net.conn)
-    criticwprobe = nengo.Probe(agent.Critic.net.conn)
-
+    # actorwprobe = nengo.Probe(agent.Actor.net.conn)
+    # criticwprobe = nengo.Probe(agent.Critic.net.conn)
+    criticprobe = nengo.Probe(agent.Critic.net.output)
     # Plot tuning curves
     if PLOT_TUNING: util.plot_tuning_curves(model, agent.net.input)
 
@@ -63,9 +63,11 @@ except Exception as e:
     BACKEND='CPU'
     sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
+cdat = sim.data[criticprobe]
+print(cdat.shape)
 util.plot_sim(sim, envprobe, errorprobe, switchprobe)
 #util.plot_value_func(model, agent, env, BACKEND)
-util.plot_trajectories(sim, env, envprobe)
+util.plot_trajectories(sim, env, envprobe, cdat)
 #util.plot_actions_by_activation(env, agent)
 #util.plot_actions_by_probability(env, agent)
 #util.plot_actions_by_decision(env)

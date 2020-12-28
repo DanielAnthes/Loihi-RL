@@ -41,23 +41,25 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     a.set_ylim([0,1.5])
     a.set_xlabel("Time")
 
-def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
+def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     '''
     trajectory plots
     '''
     episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
     episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
-    colours = np.flip(np.linspace(0.0, max(sim.trange()), len(episode_indices)) / (max(sim.trange())*1.75))
 
     fig = plt.figure()
     ax = plt.gca()
 
     last_episode = 0
-    for episode, colour in zip(episode_indices, colours):
+    for episode in episode_indices:
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
-        c = np.repeat(colour, 3)
-        ax.plot(vx, vy, '-', alpha=0.6, color=c, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
+
+        c = cdat[int(last_episode):int(episode)]
+        print(c.shape)
+        ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
+        ax.scatter(vx, vy, c=c)
         ax.plot(vx[0], vy[0], 'o', alpha=0.6, color=c)
         if timestamps is True:
             ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, color=c, fontsize=8) # plot start point beginning t in s

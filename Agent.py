@@ -23,7 +23,7 @@ class Mouse:
 
         action_indices = list(range(len(env.actions)))
         self.env = env
-        self.gamma = 0.95  # discount factor
+        self.gamma = 0.9995  # discount factor
 
         # Create shared input node
         self.net = nengo.Network()

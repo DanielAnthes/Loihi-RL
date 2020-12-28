@@ -61,8 +61,8 @@ class DeterministicCritic:
         self.net = net
         self.diameter = 2
         self.platform = .1
-        self.discount = .95
-        self.stepsize = 0.01
+        self.discount = .9995
+        self.stepsize = 0.0002
 
     def computeCritic(self, x):
         euclid_dist = np.sqrt(np.sum(x**2))
