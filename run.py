@@ -8,7 +8,7 @@ from Agent import Mouse
 from Networks import Switch
 
 BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
-STEPS = 200  # each trial is max 30 seconds
+STEPS = 40  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
