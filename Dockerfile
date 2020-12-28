@@ -7,7 +7,7 @@ RUN echo "install python" && \
 	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 	/usr/bin/python3 get-pip.py && \
 	rm get-pip.py && \
-	pip install jupyter nengo matplotlib nengo-loihi && \
+	pip install jupyter nengo matplotlib nengo-loihi mako && \
 	mkdir /Notebooks
 	
 EXPOSE 8888
