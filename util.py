@@ -59,7 +59,7 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
         c = cdat[int(last_episode):int(episode)]
         print(c.shape)
         ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode)), color='black') # plot all points w labels
-        ax.scatter(vx, vy, c=c, marker='.')
+        # ax.scatter(vx, vy, c=c, marker='.')
         ax.plot(vx[0], vy[0], 'o', alpha=0.6, color=c)
         if timestamps is True:
             ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, color=c, fontsize=8) # plot start point beginning t in s
