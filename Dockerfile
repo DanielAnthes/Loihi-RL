@@ -10,7 +10,8 @@ RUN echo "install python" && \
 	/usr/bin/python3 get-pip.py && \
 	rm get-pip.py && \
 	pip install jupyter nengo matplotlib nengo-loihi && \
-	mkdir /Notebooks
+	mkdir /Notebooks && \
+	echo "export PATH=/usr/bin:$PATH" >> ~/.bashrc
 	
 EXPOSE 8888
 WORKDIR /Notebooks
