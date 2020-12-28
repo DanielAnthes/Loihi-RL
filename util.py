@@ -55,15 +55,11 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     for episode in episode_indices:
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
-
-        c = cdat[int(last_episode):int(episode)]
-        print(c.shape)
         ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode)), color='black') # plot all points w labels
-        # ax.scatter(vx, vy, c=c, marker='.')
-        ax.plot(vx[0], vy[0], 'o', alpha=0.6, color=c)
+        ax.plot(vx[0], vy[0], 'o', alpha=0.6)
         if timestamps is True:
-            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, color=c, fontsize=8) # plot start point beginning t in s
-        ax.plot(vx[-1], vy[-1], '*', alpha=0.6, color=c) # plot end point as x
+            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, fontsize=8) # plot start point beginning t in s
+        ax.plot(vx[-1], vy[-1], '*', alpha=0.6) # plot end point as x
         last_episode = episode + 1
 
     arena = plt.Circle((0,0), 1, color='k', fill=False)
@@ -76,6 +72,7 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
+    return fig
 
 def plot_weight_evolution_3d(sim, weights_probe, title="3D Weight evolution (undefined)"):
     '''
