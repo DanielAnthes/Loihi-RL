@@ -47,6 +47,32 @@ class CriticNet:
         self.net = net
 
 
+class DeterministicCritic:
+
+    def __init__(self, n_pc, input_node, n_neuron_out, lr):
+        '''
+        drop in replacements for critic that deterministically computes the critic value as a function of the distance from the platform.
+        For testing of the actor, most parameters are unused but retained for compatibility with critic signature.
+        Parameters for the environment are HARDCODED (!)
+        '''
+        with nengo.Network() as net:
+            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=2, size_out=1)
+            net.conn = nengo.Connection(input_node, net.output)
+        self.net = net
+        self.diameter = 2
+        self.platform = .1
+        self.discount = .95
+        self.stepsize = 0.01
+
+    def computeCritic(self, x):
+        euclid_dist = np.sqrt(np.sum(x**2))
+        if euclid_dist < self.platform / 2:
+            return [1.]
+        else:
+            steps = euclid_dist / self.stepsize
+            return [self.discount ** steps]
+ 
+
 class ErrorNode:
     '''
     Computes delta as described in Foster et al.

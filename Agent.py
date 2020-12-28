@@ -1,7 +1,7 @@
 import nengo
 import numpy as np
 
-from Networks import ActorNet, CriticNet, PlaceCells, DecisionNode, ErrorNode
+from Networks import ActorNet, PlaceCells, DecisionNode, ErrorNode, DeterministicCritic
 
 
 class Mouse:
@@ -41,7 +41,7 @@ class Mouse:
             lr=act_lr
         )
         # initialize neural net for critic
-        self.Critic = CriticNet(
+        self.Critic = DeterministicCritic(
             n_pc=n_place_cells,
             input_node=self.net.input,
             n_neuron_out=100,

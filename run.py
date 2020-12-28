@@ -7,8 +7,8 @@ from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
-BACKEND = 'GPU' # choice of CPU, GPU and LOIHI
-STEPS = 120  # each trial is max 30 seconds
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+STEPS = 400  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
@@ -41,7 +41,7 @@ with nengo.Network() as model:
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
     nengo.Connection(model.switch.net.switch, agent.Error.net.errornode[2])
     nengo.Connection(agent.Error.net.errornode[1], agent.Error.net.errornode[3]) # recurrent connection to save last state; TODO: synapse=0 if transmission too bad
-    nengo.Connection(agent.Error.net.errornode[0], agent.Critic.net.conn.learning_rule)
+    # nengo.Connection(agent.Error.net.errornode[0], agent.Critic.net.conn.learning_rule)  # no learning in dummy critic
     nengo.Connection(agent.Error.net.errornode[0], agent.Actor.net.conn.learning_rule)
 
     # add Probes
