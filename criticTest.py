@@ -3,6 +3,8 @@ import numpy as np
 import nengo
 from Networks import CriticNet, ErrorNode, Switch
 from util import simulate_with_backend
+import nengo_loihi
+nengo_loihi.set_defaults()  # performance benefits
 
 '''
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
