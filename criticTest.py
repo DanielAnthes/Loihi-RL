@@ -43,7 +43,7 @@ class TestEnv:
 
 
 env = TestEnv()
-BACKEND = 'GPU'
+BACKEND = 'LOIHI'
 dt = 0.001
 duration = 80
 discount = 0.9995
@@ -91,31 +91,31 @@ reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 conndata = sim.data[learnprobe]
 
-plt.figure(figsize=(12,10))
-plt.subplot(411)
-plt.plot(t, state, label='position')
-plt.plot(t, reward, label='reward')
-plt.plot(t, criticout, label='value')
-plt.plot(t, conndata, label='delta')
-plt.legend()
-plt.subplot(412)
-plt.plot(t, sim_error, label='error')
-plt.legend()
-
-plt.subplot(413)
-plt.title('error node inputs')
-plt.plot(t, reward, label='reward')
+# plt.figure(figsize=(12,10))
+# plt.subplot(411)
+# plt.plot(t, state, label='position')
+# plt.plot(t, reward, label='reward')
 # plt.plot(t, criticout, label='value')
-plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
-plt.plot(t, sim_error, label='error')
-# plt.plot(t, sim.data[errorprobe][:,1], label='state')
-plt.plot(t, pd.Series(error.statemem).rolling(5).mean(), label="state", alpha=.5)
-# plt.plot(t, sim.data[envprobe][:,2], label='reset')
-plt.legend()
+# plt.plot(t, conndata, label='delta')
+# plt.legend()
+# plt.subplot(412)
+# plt.plot(t, sim_error, label='error')
+# plt.legend()
 
-plt.subplot(414)
-plt.plot(t, criticout)
-plt.title("Critic Value Prediction")
+# plt.subplot(413)
+# plt.title('error node inputs')
+# plt.plot(t, reward, label='reward')
+# # plt.plot(t, criticout, label='value')
+# plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
+# plt.plot(t, sim_error, label='error')
+# # plt.plot(t, sim.data[errorprobe][:,1], label='state')
+# plt.plot(t, pd.Series(error.statemem).rolling(5).mean(), label="state", alpha=.5)
+# # plt.plot(t, sim.data[envprobe][:,2], label='reset')
+# plt.legend()
 
-plt.tight_layout()
-plt.show()
+# plt.subplot(414)
+# plt.plot(t, criticout)
+# plt.title("Critic Value Prediction")
+
+# plt.tight_layout()
+# plt.show()
