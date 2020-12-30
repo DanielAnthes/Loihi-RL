@@ -1,74 +1,36 @@
-import numpy as np
+import os
 import matplotlib.pyplot as plt
-import nengo
+
 import util
+from config_parser import load
 
-from Environment import Maze
-from Agent import Mouse
-from Networks import Switch
 
-BACKEND = 'LOIHI' # choice of CPU, GPU and LOIHI
-STEPS = 40  # each trial is max 30 seconds
-N_PCX = 23  # N place cells in X direction
-N_PCY = 23  # ibid. in Y direction
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
-# set up simulation, connect networks
-env = Maze()
 
-with nengo.Network() as model:
-    agent = Mouse(env, N_PCX, N_PCY, act_lr=1e-6, crit_lr=1e-6)
+manager = load("config.json")
+manager.run(BACKEND)
+manager.save()
 
-    envstate = nengo.Node(lambda time, action: env.step(action), size_in=1, size_out=5)
+sim = manager.Simulator
+env = manager.Environment
 
-    # add node to control learning
-    model.switch = Switch(state=1)
+if PLOT_TUNING:
+    util.plot_tuning_curves(manager.Network, manager.Agent.net.input)
 
-    # compute place cell activations
-    # nengo.Connection(envstate[:2], agent.PlaceCells.net.placecells)
+criticprobe = manager.Probes["criticprobe"]
+envprobe = manager.Probes["envprobe"]
+errorprobe = manager.Probes["errorprobe"]
+switchprobe = manager.Probes["switchprobe"]
 
-    # place cells give input to actor and critic
-    nengo.Connection(envstate[:2], agent.net.input)
-
-    # take actor net as input to decision node
-    nengo.Connection(agent.Actor.net.output, agent.DecisionMaker.net.choicenode)
-
-    # execute action in environment
-    nengo.Connection(agent.DecisionMaker.net.choicenode, envstate, synapse=0)
-
-    # connect error node
-    nengo.Connection(envstate[2], agent.Error.net.errornode[0])
-    nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
-    nengo.Connection(model.switch.net.switch, agent.Error.net.errornode[2])
-    nengo.Connection(agent.Error.net.errornode[1], agent.Error.net.errornode[3]) # recurrent connection to save last state; TODO: synapse=0 if transmission too bad
-    # nengo.Connection(agent.Error.net.errornode[0], agent.Critic.net.conn.learning_rule)  # no learning in dummy critic
-    nengo.Connection(agent.Error.net.errornode[0], agent.Actor.net.conn.learning_rule)
-
-    # add Probes
-    errorprobe = nengo.Probe(agent.Error.net.errornode[0])
-    envprobe = nengo.Probe(envstate)
-    switchprobe = nengo.Probe(model.switch.net.switch)
-    # actorwprobe = nengo.Probe(agent.Actor.net.conn)
-    # criticwprobe = nengo.Probe(agent.Critic.net.conn)
-    criticprobe = nengo.Probe(agent.Critic.net.output)
-    # Plot tuning curves
-    if PLOT_TUNING: util.plot_tuning_curves(model, agent.net.input)
-
-# CPU Fallback
-try:
-    sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
-except Exception as e:
-    print(e)
-    print("WARNING: Falling back to CPU backend")
-    BACKEND='CPU'
-    sim = util.simulate_with_backend(BACKEND, model, duration=STEPS, timestep=env.timestep)
 
 cdat = sim.data[criticprobe]
 print(cdat.shape)
 fig = util.plot_sim(sim, envprobe, errorprobe, switchprobe)
-fig.savefig("sim.png")
+fig.savefig(os.path.join(manager.Directory, "sim.png"))
 #util.plot_value_func(model, agent, env, BACKEND)
 fig = util.plot_trajectories(sim, env, envprobe, cdat)
-fig.savefig("trajectory.png")
+fig.savefig(os.path.join(manager.Directory, "trajectory.png"))
 #util.plot_actions_by_activation(env, agent)
 #util.plot_actions_by_probability(env, agent)
 #util.plot_actions_by_decision(env)
