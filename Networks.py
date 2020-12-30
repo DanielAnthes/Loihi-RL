@@ -19,6 +19,8 @@ class ActorNet:
         '''
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
+            # seems to fix action selection?
+            net.output.intercepts = [0] * n_neuron_out
             net.conn = nengo.Connection(input_node, net.output,
                                         function=lambda x: [0]*8,
                                         solver=nengo.solvers.LstsqL2(weights=True),
@@ -102,9 +104,12 @@ class ErrorNode:
         if state is None:
             return [0, value]  # no error without prediction
 
-        delta = reward if reward > 0 else self.discount*value - state
-        value = 0 if reward > 0 else value  # fix bleeding into novel episodes
-
+        if reward > 0:
+            delta = reward
+            value = 0 # fix bleeding into novel episodes
+        else:
+            delta = self.discount*value - state
+            
         return [delta*switch, value]
 
 
