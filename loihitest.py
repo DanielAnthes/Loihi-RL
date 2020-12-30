@@ -11,17 +11,19 @@ action_indices = list(range(4))
 
 with nengo.Network() as model:
     # Create shared input node
-    net = nengo.Network()
-    net.input = nengo.Ensemble(
+    with nengo.Network() as net:
+        nengo_loihi.add_params(net)
+        input = nengo.Ensemble(
         n_neurons=n_place_cells,
         dimensions=2,
         radius=2
-    )
+        )
+        net.config[input].on_chip = True
 
     # initialize neural net for actor
     Actor = ActorNet(
         n_pc=n_place_cells,
-        input_node=net.input,
+        input_node=input,
         n_neuron_out=200,
         lr=act_lr
     )
@@ -29,7 +31,7 @@ with nengo.Network() as model:
     # initialize neural net for critic
     Critic = DeterministicCritic(
         n_pc=n_place_cells,
-        input_node=net.input,
+        input_node=input,
         n_neuron_out=100,
         lr=crit_lr
     )

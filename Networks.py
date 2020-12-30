@@ -25,7 +25,7 @@ class ActorNet:
                                         function=lambda x: [0]*8,
                                         solver=nengo.solvers.LstsqL2(weights=True),
                                         learning_rule_type=Learning.TDL(learning_rate=lr))
-            net.config[output].on_chip = on_chip
+            net.config[net.output].on_chip = on_chip
         self.net = net
 
 
@@ -48,7 +48,7 @@ class CriticNet:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
             net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
-            net.config[output].on_chip = on_chip
+            net.config[net.output].on_chip = on_chip
         self.net = net
 
 
