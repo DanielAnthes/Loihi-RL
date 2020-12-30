@@ -1,4 +1,5 @@
 import nengo
+import nengo_loihi
 import numpy as np
 
 from Networks import ActorNet, PlaceCells, DecisionNode, ErrorNode, DeterministicCritic
@@ -34,12 +35,15 @@ class Mouse:
         self.gamma = discount_factor  # discount factor
 
         # Create shared input node
-        self.net = nengo.Network()
-        self.net.input = nengo.Ensemble(
+        with nengo.Network() as net:
+            nengo_loihi.add_params(net)
+            net.input = nengo.Ensemble(
             n_neurons=n_place_cells,
             dimensions=2,
             radius=2
         )
+        net.config[net.input].on_chip=True
+        self.net = net
 
         # initialize neural net for actor
         self.Actor = ActorNet(
