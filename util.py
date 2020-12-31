@@ -265,10 +265,15 @@ def plot_tuning_curves(model, ensemble):
     plt.show()
 
 def simulate_with_backend(backend, model, duration, timestep):
-    if backend == 'CPU':
-        sim = nengo.Simulator(model, dt=timestep)
+    sim = create_simulator(backend, model, timestep)
 
-    elif backend == 'GPU':
+    with sim:
+        sim.run(duration)
+
+    return sim
+
+def create_simulator(backend:str, model:nengo.Network, timestep:float) -> nengo.Simulator:
+    if backend == 'GPU':
         import nengo_ocl
         import pyopencl as cl
         # set device to avoid being prompted every time
@@ -281,7 +286,7 @@ def simulate_with_backend(backend, model, duration, timestep):
         import nengo_loihi
         sim = nengo_loihi.Simulator(model, dt=timestep, target='loihi')
 
-    with sim:
-        sim.run(duration)
+    else: # backend == 'CPU':
+        sim = nengo.Simulator(model, dt=timestep)
 
     return sim
