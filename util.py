@@ -54,6 +54,8 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
 
     last_episode = 0
     for episode in episode_indices:
+        if episode == last_episode:
+            continue
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
         ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode)), color='black') # plot all points w labels
