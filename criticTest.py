@@ -45,7 +45,7 @@ class TestEnv:
 env = TestEnv()
 BACKEND = 'GPU'
 dt = 0.001
-duration = 36
+duration = 200
 discount = 0.9995
 
 with nengo.Network() as net:
@@ -53,7 +53,7 @@ with nengo.Network() as net:
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
     error =  ErrorNode(discount=discount)  # seems like a reasonable value to have a reward gradient over the entire episode
-    switch =  Switch(1)  # needed for compatibility with error implementation
+    switch =  Switch(state=1, switch_off=True, switchtime=duration/2)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
 
@@ -74,6 +74,7 @@ with nengo.Network() as net:
     criticprobe = nengo.Probe(critic.net.output)
     errorprobe = nengo.Probe(error.net.errornode)
     learnprobe = nengo.Probe(critic.net.conn)
+    switchprobe = nengo.Probe(switch.net.switch)
 
 try:
     sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
@@ -90,6 +91,7 @@ state = sim.data[envprobe][:,0]
 reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 conndata = sim.data[learnprobe]
+learnswitch = sim.data[switchprobe]
 
 plt.figure(figsize=(12,10))
 plt.subplot(411)
@@ -100,6 +102,7 @@ plt.plot(t, conndata, label='delta')
 plt.legend()
 plt.subplot(412)
 plt.plot(t, sim_error, label='error')
+plt.plot(t, learnswitch, label='learning')
 plt.legend()
 
 plt.subplot(413)

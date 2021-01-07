@@ -199,9 +199,17 @@ class PlaceCells:
 
 
 class Switch:
-    def __init__(self, state=1):
+    def __init__(self, state=1, switch_off=False, switchtime=None):
         self.state = state
+        self.switchtime = switchtime
+        self.switch = switch_off
 
         with nengo.Network() as net:
-            net.switch = nengo.Node(lambda t: self.state, size_out=1)
+            net.switch = nengo.Node(self.switch_func , size_out=1)
         self.net = net
+
+    def switch_func(self, t):
+        if self.switch and t > self.switchtime:
+            self.state = 0
+        return self.state
+
