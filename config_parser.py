@@ -11,6 +11,7 @@ import util
 from Agent import Mouse
 from Environment import Maze
 from Networks import Switch
+from extended_sim import ProbeMaxLength, ProbeToFile
 
 
 class PseudoStruct:
@@ -185,9 +186,9 @@ class Manager:
             # add Probes
             errorprobe = nengo.Probe(agent.Error.net.errornode[0])
             envprobe = nengo.Probe(envstate)
-            switchprobe = nengo.Probe(model.switch.net.switch)
-            actorwprobe = nengo.Probe(agent.Actor.net.conn, "weights")
-            criticwprobe = nengo.Probe(agent.Critic.net.conn, "weights")
+            switchprobe = nengo.Probe(model.switch.net.switch, sample_every=1.0)
+            actorwprobe = ProbeMaxLength(agent.Actor.net.conn, 1, "weights", sample_every=.5)
+            criticwprobe = ProbeMaxLength(agent.Critic.net.conn, 1, "weights", sample_every=.5)
             criticprobe = nengo.Probe(agent.Critic.net.output)
         
         # self all of the probes for future reference

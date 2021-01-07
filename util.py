@@ -6,6 +6,9 @@ from math import ceil
 import nengo
 from nengo.utils.ensemble import tuning_curves  # another option is response_curves 
 
+from extended_sim import mSimulator
+
+
 def plot_sim(sim, envprobe, errorprobe, switchprobe):
     '''
     network plots
@@ -289,6 +292,6 @@ def create_simulator(backend:str, model:nengo.Network, timestep:float) -> nengo.
         sim = nengo_loihi.Simulator(model, dt=timestep, target='loihi')
 
     else: # backend == 'CPU':
-        sim = nengo.Simulator(model, dt=timestep)
+        sim = mSimulator(model, dt=timestep)
 
     return sim

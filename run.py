@@ -1,4 +1,4 @@
-import os
+import os, sys
 import matplotlib.pyplot as plt
 
 import util
@@ -10,12 +10,13 @@ PLOT_TUNING = False  # Be aware that producing this plot is quite slow
 
 manager = load("config.json")
 
-manager.load_saved_weights(True)
+manager.load_saved_weights(False)
 manager.run(BACKEND)
 manager.save()
 
 sim = manager.Simulator
 env = manager.Environment
+sys.exit()
 
 if PLOT_TUNING:
     util.plot_tuning_curves(manager.Network, manager.Agent.net.input)
