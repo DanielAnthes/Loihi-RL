@@ -18,7 +18,7 @@ class ActorNet:
                 n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
+            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8), intercepts=[0] * n_neuron_out)
             net.conn = nengo.Connection(input_node, net.output,
                                         function=lambda x: [0]*8,
                                         solver=nengo.solvers.LstsqL2(weights=True),
@@ -71,7 +71,7 @@ class DeterministicCritic:
         else:
             steps = euclid_dist / self.stepsize
             return [self.discount ** steps]
- 
+
 
 class ErrorNode:
     '''
@@ -87,7 +87,7 @@ class ErrorNode:
     '''
     def __init__(self, discount):
         self.discount = discount
- 
+
         with nengo.Network() as net:
             net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
 
@@ -102,7 +102,7 @@ class ErrorNode:
         if state is None:
             return [0, value]  # no error without prediction
 
-        delta = reward if reward > 0 else self.discount*value - state
+        delta = reward - value if reward > 0 else self.discount*value - state
         value = 0 if reward > 0 else value  # fix bleeding into novel episodes
 
         return [delta*switch, value]
@@ -143,7 +143,7 @@ class DecisionNode:
         self.activation = np.append(self.activation, [activation_in], axis=0)
 
         coin = random()
-        if coin > .25 and self.lastaction is not None:  # repeat last action
+        if coin > .005 and self.lastaction is not None:  # repeat last action
                 decision = self.lastaction
         else:
             pos_activation = np.maximum(activation_in, 0)

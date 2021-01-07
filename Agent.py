@@ -7,7 +7,7 @@ from Networks import ActorNet, PlaceCells, DecisionNode, ErrorNode, Deterministi
 class Mouse:
     '''
     Actor class, has an environment in which actions are performed
-    Learns to take optimal actions in the environment 
+    Learns to take optimal actions in the environment
     by applying Actor Critic Learning
     '''
 

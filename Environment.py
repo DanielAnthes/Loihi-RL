@@ -16,7 +16,7 @@ class Maze:
         self.mousepos = self._get_random_start()
         self.done = False  # whether mouse has reached platform
         self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
-        self.max_time = 30  # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = 120  # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
 

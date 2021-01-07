@@ -4,7 +4,7 @@ from matplotlib import cm
 import numpy as np
 from math import ceil
 import nengo
-from nengo.utils.ensemble import tuning_curves  # another option is response_curves 
+from nengo.utils.ensemble import tuning_curves  # another option is response_curves
 
 def plot_sim(sim, envprobe, errorprobe, switchprobe):
     '''
@@ -16,21 +16,21 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     a = ax[0]
     a.plot(t, sim.data[errorprobe])
     a.set_title("Error Signal")
-    
+
     a = ax[1]
     data = sim.data[envprobe][:,:-1]
     xloc = data[:,0]
     yloc = data[:,1]
     reward = data[:,2]
     done = data[:,3]
-    
+
     a.set_ylim([-1.0, 1.0])
     a.plot(t, xloc, label="xloc")
     a.plot(t, yloc, label="yloc")
-    a.vlines(t[np.where(reward==1)], 0, 1, 
+    a.vlines(t[np.where(reward==1)], 0, 1,
         colors="green", linestyles="dashed", zorder=3,
         transform=a.get_xaxis_transform(), label="reward")
-    a.vlines(t[np.where((reward==0) & (done==1))], 0, 1, 
+    a.vlines(t[np.where((reward==0) & (done==1))], 0, 1,
         colors="red", linestyles="dashed", zorder=3,
         transform=a.get_xaxis_transform(), label="done")
     a.legend()
@@ -73,6 +73,72 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
+    return fig
+
+
+def plot_movement_density_evolution(sim, env, envprobe):
+    '''
+    plots the density of movements over time
+    '''
+    episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
+    episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
+
+    last_episode = 0
+
+    episodes = np.array([])
+    d_mean = np.array([])
+    d_error = np.array([])
+
+    for episode in episode_indices:
+        pos = sim.data[envprobe][int(last_episode):int(episode),0:2]
+        centroid = np.sum(pos, axis=0) / pos.shape[0]
+        distances = np.sqrt((pos[:,0] - centroid[0])**2 + (pos[:,1] - centroid[1])**2)
+        dist_mean = np.sum(distances) / len(distances)
+        dist_error = np.sum((distances - dist_mean) ** 2) / len(distances)
+
+        episodes = np.append(episodes, episode)
+        d_mean = np.append(d_mean, dist_mean)
+        d_error = np.append(d_error, dist_error)
+
+        last_episode = episode
+
+    fig = plt.figure()
+    plt.errorbar(episodes, d_mean, d_error, linestyle='None', marker='^')
+    plt.title("Movement Density Evolution")
+    plt.xlabel("Epoch (t)")
+    plt.ylabel("Distance from centroid")
+    return fig
+
+def plot_ttf_evolution(sim, env, envprobe, RA=3, labels=False):
+    '''
+    plots time to finish evolution
+    '''
+    episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
+    episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
+
+    last_episode = 0
+
+    episodes = np.array([])
+
+    for episode in episode_indices:
+        episodes = np.append(episodes, episode - last_episode)
+        last_episode = episode
+
+    ra_s = np.repeat(episodes[0], RA)
+    ra_e = np.repeat(episodes[-1], RA)
+    ra = np.concatenate((episodes, ra_e))
+    ra = [np.mean(ra[i:i+RA]) * env.timestep for i in range(len(episodes))]
+
+    indices_ep = np.arange(len(episodes)) + 1
+
+    fig = plt.figure()
+    plt.scatter(indices_ep, episodes * env.timestep, marker='x', label="Consecutive episodes")
+    plt.plot(indices_ep, ra, 'r-', alpha=0.6, label="RA" + str(RA))
+    plt.xlabel("Epoch (Index)")
+    plt.ylabel("Length (t in s)")
+    plt.title("TTF evolution")
+    if labels is True:
+        plt.legend()
     return fig
 
 def plot_weight_evolution_3d(sim, weights_probe, title="3D Weight evolution (undefined)"):
@@ -215,7 +281,7 @@ def plot_place_cell(model, agent, env, backend, loc, len_presentation=0.1):
     plot a place cell, idealised vs what we simulate
     N.B. does not work anymore with the Guassian encoders
     '''
-    
+
     # get idealised outputs
     activations = agent.PlaceCells.place_cell_activation(loc)
 

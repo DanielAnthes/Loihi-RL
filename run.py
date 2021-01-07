@@ -7,8 +7,8 @@ from Environment import Maze
 from Agent import Mouse
 from Networks import Switch
 
-BACKEND = 'LOIHI' # choice of CPU, GPU and LOIHI
-STEPS = 40  # each trial is max 30 seconds
+BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
+STEPS = 2400  # each trial is max 30 seconds
 N_PCX = 23  # N place cells in X direction
 N_PCY = 23  # ibid. in Y direction
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
@@ -69,6 +69,10 @@ fig.savefig("sim.png")
 #util.plot_value_func(model, agent, env, BACKEND)
 fig = util.plot_trajectories(sim, env, envprobe, cdat)
 fig.savefig("trajectory.png")
+fig = util.plot_movement_density_evolution(sim, env, envprobe)
+fig.savefig("density.png")
+fig = util.plot_ttf_evolution(sim, env, envprobe)
+fig.savefig("ttf.png")
 #util.plot_actions_by_activation(env, agent)
 #util.plot_actions_by_probability(env, agent)
 #util.plot_actions_by_decision(env)
