@@ -9,6 +9,8 @@ BACKEND = 'CPU' # choice of CPU, GPU and LOIHI
 PLOT_TUNING = False  # Be aware that producing this plot is quite slow
 
 manager = load("config.json")
+
+manager.load_saved_weights(True)
 manager.run(BACKEND)
 manager.save()
 
@@ -37,4 +39,4 @@ fig.savefig(os.path.join(manager.Directory, "trajectory.png"))
 #util.plot_weight_evolution_3d(sim, actorwprobe, title="Weight evolution of place cells to actor")
 #util.plot_weight_evolution_2d(sim, criticwprobe, title="Weight evolution of place cells to critic")
 #util.plot_place_cell(model, agent, env, BACKEND, [0.0, 0.0])
-plt.show()
+# plt.show()
