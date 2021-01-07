@@ -1,6 +1,6 @@
 {
     "simulation" : {
-        "steps" : 270,
+        "steps" : 30,
         "timestep": 1e-2
     },
     "network" : {
@@ -9,7 +9,7 @@
         "discount_factor": 0.9995,
         "actor": {
             "n_neurons": 200,
-            "learning_rate": 1e-6
+            "learning_rate": 5e-5
         },
         "critic": {
             "n_neurons": 100,
@@ -20,6 +20,10 @@
         "speed": 0.5,
         "diameter": 2,
         "platform_diameter": 0.1,
-        "max_time": 90
+        "max_time": 30
+    },
+    "data" : {
+        "actor_weights" : "actor_weights.npy",
+        "critic_weights" : "critic_weights.npy"
     }
 }
