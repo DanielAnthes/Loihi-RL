@@ -82,7 +82,7 @@ class ErrorNode:
         if state is None:
             return [0, value]  # no error without prediction
 
-        (delta, value) = (reward - state, 0) if reward > .5 else (self.discount*value - state, value)
+        (delta, value) = (reward - value, 0) if reward > .5 else (self.discount*value - state, value)
 
         self.valuemem.append(value)
         self.statemem.append(state)

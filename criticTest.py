@@ -45,7 +45,7 @@ class TestEnv:
 env = TestEnv()
 BACKEND = 'GPU'
 dt = 0.001
-duration = 80
+duration = 36
 discount = 0.9995
 
 with nengo.Network() as net:
