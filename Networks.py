@@ -20,13 +20,14 @@ class ActorNet:
         '''
         with nengo.Network() as net:
             nengo_loihi.add_params(net)
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
+            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8), label='Actor-Ensemble')
             # seems to fix action selection?
             net.output.intercepts = [0] * n_neuron_out
             net.conn = nengo.Connection(input_node, net.output,
                                         function=lambda x: [0]*8,
                                         solver=nengo.solvers.LstsqL2(weights=True),
-                                        learning_rule_type=Learning.TDL(learning_rate=lr))
+                                        learning_rule_type=Learning.TDL(learning_rate=lr),
+                                        label=' Actor-Learner-Connection')
             net.config[net.output].on_chip = on_chip
         self.net = net
 
@@ -47,8 +48,8 @@ class CriticNet:
         '''
         with nengo.Network() as net:
             nengo_loihi.add_params(net)
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
+            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1, label='Critic-Ensemble')
+            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0], label='Critic-Conn')
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
             net.config[net.output].on_chip = on_chip
         self.net = net
@@ -63,8 +64,8 @@ class DeterministicCritic:
         Parameters for the environment are HARDCODED (!)
         '''
         with nengo.Network() as net:
-            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=2, size_out=1)
-            net.conn = nengo.Connection(input_node, net.output)
+            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=2, size_out=1, label='Critic-Ensemble')
+            net.conn = nengo.Connection(input_node, net.output, label='Critic-Conn')
         self.net = net
         self.diameter = 2
         self.platform = .1
@@ -96,7 +97,7 @@ class ErrorNode:
         self.discount = discount
  
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2, label='Error-Node')
 
         self.net = net
 
@@ -137,7 +138,7 @@ class DecisionNode:
         self.probability = np.array([np.zeros(8)])
 
         with nengo.Network() as net:
-            net.choicenode = nengo.Node(lambda t,x: self.chooseAction(x), size_in=len(actions), size_out=1)
+            net.choicenode = nengo.Node(lambda t,x: self.chooseAction(x), size_in=len(actions), size_out=1, label='Decision-Node')
         self.net = net
 
     def chooseAction(self, activation_in):
@@ -153,7 +154,7 @@ class DecisionNode:
         self.activation = np.append(self.activation, [activation_in], axis=0)
 
         coin = random()
-        if coin > .25 and self.lastaction is not None:  # repeat last action
+        if coin > .2 and self.lastaction is not None:  # repeat last action
                 decision = self.lastaction
         else:
             pos_activation = np.maximum(activation_in, 0)
