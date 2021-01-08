@@ -9,10 +9,10 @@ from Environment import TestEnv
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
 '''
 
-env = TestEnv()
-BACKEND = 'GPU'
+env = TestEnv(invert=True)
+BACKEND = 'CPU'
 dt = 0.001
-duration = 200
+duration = 400
 discount = 0.9995
 
 with nengo.Network() as net:
@@ -20,7 +20,7 @@ with nengo.Network() as net:
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
     error =  ErrorNode(discount=discount)  # seems like a reasonable value to have a reward gradient over the entire episode
-    switch =  Switch(state=1, switch_off=True, switchtime=duration/2)  # needed for compatibility with error implementation
+    switch =  Switch(state=1, switch_off=False, switchtime=duration/2)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
 
@@ -32,7 +32,7 @@ with nengo.Network() as net:
     nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0) # learning switch
     nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0) # feed value into next step
     nengo.Connection(envnode[2], error.net.errornode[4], synapse=0) # propagate reset signal
-    
+
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
 

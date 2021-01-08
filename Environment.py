@@ -102,27 +102,27 @@ class Maze:
 
 
 class TestEnv:
-
-    def __init__(self):
+    def __init__(self, invert=False):
+        self.invert = invert
         self.stepsize = 0.0002  # with standard dt and track length 2 this
                                 # leads to episode length of 10 seconds
         self.pathlen = 2
-        self.agentpos = 0
+        self.agentpos = 2 if self.invert else 0
         self.reward = 1
         self.goalcounter = 0
         self.reset = 500
 
     def step(self):
         reset = 0
-        self.agentpos += self.stepsize
+        self.agentpos += -self.stepsize if self.invert else self.stepsize
         if self.goalReached():
             reward = self.reward
             if self.goalcounter == self.reset:
-                self.agentpos = 0
+                self.agentpos = 2 if self.invert else 0
                 self.goalcounter = 0
             else:
                 self.goalcounter += 1
-                self.agentpos = self.pathlen
+                self.agentpos = 0 if self.invert else self.pathlen
 
                 if self.goalcounter == self.reset:
                     reset = 1
@@ -132,7 +132,64 @@ class TestEnv:
         return np.array([self.agentpos, reward, reset])
 
     def goalReached(self):
-        return abs(self.agentpos - self.pathlen) < self.stepsize
+        if self.invert:
+            return self.stepsize > self.agentpos
+        else:
+            return abs(self.agentpos - self.pathlen) < self.stepsize
 
+class TestEnv2D:
 
+    def __init__(self):
+        self.stepsize = 0.0002
+        self.diameter = 2
+        self.platformsize = 0.1
+        self.platform_loc = np.array([0, 0], dtype='float')
+        self.mousepos = self._get_random_start()
+        self.reward = 1
+        self.goalcounter = 0
+        self.reset = 500
 
+    def _get_random_start(self):
+        '''
+        random restart position close to the edge of the arena
+        '''
+        radius=0.95 * self.diameter / 2
+        angle = np.random.random()*2*np.pi
+        x = radius * np.cos(angle)
+        y = radius * np.sin(angle)
+        return np.array([x,y])
+
+    def _outOfBounds(self, loc):
+        '''
+        takes a location and returns true if the position lies outside of the maze
+        '''
+        distanceFromCenter = np.sqrt(np.sum(loc**2)) #euclidean distance
+        return distanceFromCenter > (self.diameter / 2)
+
+    def _goalReached(self):
+        goalDist = abs(np.sqrt(np.sum((self.platform_loc - self.mousepos)**2)))
+        return goalDist < self.platformsize / 2
+
+    def step(self):
+        reset = 0
+        if self.mousepos[0] == .0 or self.mousepos[1] == .0:
+            self.mousepos += -self.mousepos * self.stepsize
+        else:
+            self.mousepos += -(self.mousepos / np.absolute(self.mousepos)) * self.stepsize
+
+        if self._goalReached():
+            reward = self.reward
+
+            if self.goalcounter == self.reset:
+                self.mousepos = self._get_random_start()
+                self.goalcounter = 0
+            else:
+                self.goalcounter += 1
+                self.mousepos = np.copy(self.platform_loc)
+
+                if self.goalcounter == self.reset:
+                    reset = 1
+        else:
+            reward = 0
+
+        return np.array([self.mousepos[0], self.mousepos[1], reward, reset])
