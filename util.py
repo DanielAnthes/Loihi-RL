@@ -21,8 +21,8 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     data = sim.data[envprobe][:,:-1]
     xloc = data[:,0]
     yloc = data[:,1]
-    reward = data[:,2]
-    done = data[:,3]
+    reward = data[:,3]
+    done = data[:,4]
 
     a.set_ylim([-1.0, 1.0])
     a.plot(t, xloc, label="xloc")
@@ -46,7 +46,7 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
     '''
     trajectory plots
     '''
-    episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
+    episode_indices = np.where(sim.data[envprobe][:,4] == 1.0)
     episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
 
     fig = plt.figure()
@@ -54,10 +54,18 @@ def plot_trajectories(sim, env, envprobe, cdat, labels=False, timestamps=True):
 
     last_episode = 0
     for episode in episode_indices:
+        if last_episode == episode:
+            continue
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
+        vrot = sim.data[envprobe][int(last_episode),2]
         ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode)), color='black') # plot all points w labels
+
+        r = 0.1
+        dx = r * np.cos(vrot)
+        dy = r * np.sin(vrot)
         ax.plot(vx[0], vy[0], 'o', alpha=0.6)
+        ax.arrow(vx[0], vy[0], dx, dy)
         if timestamps is True:
             ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, fontsize=8) # plot start point beginning t in s
         ax.plot(vx[-1], vy[-1], '*', alpha=0.6) # plot end point as x
@@ -331,10 +339,15 @@ def plot_tuning_curves(model, ensemble):
     plt.show()
 
 def simulate_with_backend(backend, model, duration, timestep):
-    if backend == 'CPU':
-        sim = nengo.Simulator(model, dt=timestep)
+    sim = create_simulator(backend, model, timestep)
 
-    elif backend == 'GPU':
+    with sim:
+        sim.run(duration)
+
+    return sim
+
+def create_simulator(backend:str, model:nengo.Network, timestep:float) -> nengo.Simulator:
+    if backend == 'GPU':
         import nengo_ocl
         import pyopencl as cl
         # set device to avoid being prompted every time
@@ -347,7 +360,19 @@ def simulate_with_backend(backend, model, duration, timestep):
         import nengo_loihi
         sim = nengo_loihi.Simulator(model, dt=timestep, target='loihi')
 
-    with sim:
-        sim.run(duration)
+    else: # backend == 'CPU':
+        sim = nengo.Simulator(model, dt=timestep)
 
     return sim
+
+def plot_actionspread(env):
+    plt.figure()
+    plt.title("Incoming Actions")
+    plt.scatter(range(len(env.actionmemory)), env.actionmemory)
+
+    plt.figure()
+    plt.title("Delta pos")
+    d = np.array(env.deltamemory)
+    plt.plot(range(len(env.deltamemory)), d[:, 0], label="x-delta")
+    plt.plot(range(len(env.deltamemory)), d[:, 1], label="y-delta")
+    plt.legend()

@@ -18,9 +18,14 @@ class ActorNet:
                 n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8), intercepts=[0] * n_neuron_out)
+            net.output = nengo.Ensemble(
+                n_neurons=n_neuron_out, 
+                dimensions=1, 
+                radius=np.sqrt(2), 
+                intercepts=[0] * n_neuron_out
+            )
             net.conn = nengo.Connection(input_node, net.output,
-                                        function=lambda x: [0]*8,
+                                        function=lambda x: [0],
                                         solver=nengo.solvers.LstsqL2(weights=True),
                                         learning_rule_type=Learning.TDL(learning_rate=lr))
         self.net = net
@@ -41,8 +46,15 @@ class CriticNet:
             n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
-            net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
+            net.output = nengo.Ensemble(
+                n_neurons=n_neuron_out, 
+                dimensions=1
+            )
+            net.conn = nengo.Connection(
+                input_node, 
+                net.output, 
+                function=lambda x: [0]
+            )
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
         self.net = net
 
@@ -56,7 +68,7 @@ class DeterministicCritic:
         Parameters for the environment are HARDCODED (!)
         '''
         with nengo.Network() as net:
-            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=2, size_out=1)
+            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=3, size_out=1)
             net.conn = nengo.Connection(input_node, net.output)
         self.net = net
         self.diameter = 2
@@ -65,7 +77,7 @@ class DeterministicCritic:
         self.stepsize = 0.0002
 
     def computeCritic(self, x):
-        euclid_dist = np.sqrt(np.sum(x**2))
+        euclid_dist = np.sqrt(np.sum(x[:2]**2))
         if euclid_dist < self.platform / 2:
             return [1.]
         else:

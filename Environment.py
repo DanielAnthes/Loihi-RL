@@ -13,12 +13,14 @@ class Maze:
         self.diameter = 2  # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
         self.platformsize = 0.1 # meters, diameter of platform
         self.platform_loc = np.array([0,0], dtype='float')  # location of platform x,y coordinates in meters
-        self.mousepos = self._get_random_start()
+        self.mousepos, self.mouserot = self._get_random_start()
+        self.maxrot = np.pi/2
         self.done = False  # whether mouse has reached platform
-        self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
+        # self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
         self.max_time = 120  # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
+        self.deltamemory = list()
 
     def _outOfBounds(self, loc):
         '''
@@ -48,21 +50,24 @@ class Maze:
                     done    - 1 if target or time limit reached 0 otherwise
                     time    - float
         '''
-        action = action.astype(int)[0]
+        # action = action.astype(int)[0]
+        action = action[0]
 
         self.time += self.timestep
         self.actionmemory.append(action)
         if self.done:  # check whether simulation has ended
-            pn = self._get_random_start()
-            self.reset(pn)  # random starting position
-            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
+            self.reset()  # random starting position
+            returnarr = np.array([self.mousepos[0], self.mousepos[1], self.mouserot, 0, 0, self.time])
             return returnarr
 
-        direction = self.actions[action]
+        # direction = self.actions[action]
         len_step = self.speed * self.timestep
-        delta_pos = (direction / np.sqrt(np.sum(direction**2))) * len_step
+        rot = self.mouserot + action * self.maxrot
+        delta_pos = len_step * np.array([np.cos(rot), np.sin(rot)])
+        self.deltamemory.append(delta_pos)
         if not self._outOfBounds(self.mousepos + delta_pos): # if mouse would go out of bounds bounce back
             self.mousepos += delta_pos
+            self.mouserot = rot
 
         if self._outOfBounds(self.mousepos):
             print("out of bounds!")
@@ -76,17 +81,21 @@ class Maze:
         doneval = 1 if self.done else 0
 
         # pack return in an array
-        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time])
+        returnarr = np.array([self.mousepos[0], self.mousepos[1], self.mouserot, reward, doneval, self.time])
         return returnarr
 
-    def reset(self, mousepos=np.array([0,1], dtype='float')):
+    def reset(self, start_cond=None, dtype='float'):
         '''
         reset the environment, returns initial position
         '''
+        if start_cond is None:
+            self.mousepos, self.mouserot = self._get_random_start()
+        else:
+            self.mousepos, self.mouserot = start_cond
+
         self.time = 0
         self.done = False
-        self.mousepos = mousepos
-        return self.mousepos
+        return self.mousepos, self.mouserot
 
     def _get_random_start(self):
         '''
@@ -96,4 +105,10 @@ class Maze:
         angle = np.random.random()*2*np.pi
         x = radius * np.cos(angle)
         y = radius * np.sin(angle)
-        return np.array([x,y])
+        # random facing direction
+        rot = (np.random.rand() - 0.5) * np.pi
+        # always facing the platform
+        r = np.sqrt(x**2 + y**2)
+        a = np.cos(x / r)
+        rot = a - np.pi
+        return np.array([x,y]), rot

@@ -21,7 +21,7 @@ class Mouse:
         '''
         n_place_cells = n1*n2
 
-        action_indices = list(range(len(env.actions)))
+        # action_indices = list(range(len(env.actions)))
         self.env = env
         self.gamma = 0.9995  # discount factor
 
@@ -29,8 +29,8 @@ class Mouse:
         self.net = nengo.Network()
         self.net.input = nengo.Ensemble(
             n_neurons=n_place_cells,
-            dimensions=2,
-            radius=2
+            dimensions=3,
+            radius=np.sqrt(3)
         )
 
         # initialize neural net for actor
@@ -47,5 +47,5 @@ class Mouse:
             n_neuron_out=100,
             lr=crit_lr
         )
-        self.DecisionMaker = DecisionNode(action_indices)
+        #self.DecisionMaker = DecisionNode(action_indices)
         self.Error = ErrorNode(self.gamma)
