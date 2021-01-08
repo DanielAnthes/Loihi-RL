@@ -2,6 +2,8 @@
 .vscode
 __pycache__
 .tool-versions
+*.png
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
