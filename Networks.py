@@ -31,7 +31,7 @@ class CriticNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, n_pc, input_node, n_neuron_out, lr):
+    def __init__(self, input_node, n_neuron_out, lr):
         '''
         initialize critic net as a nengo network object
 
@@ -43,6 +43,8 @@ class CriticNet:
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
             net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
+            # TODO: PES changes Decoders of incoming node
+            # TODO: Does this interfer with other learning due to shared input?
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
         self.net = net
 
@@ -61,25 +63,34 @@ class ErrorNode:
     '''
     def __init__(self, discount):
         self.discount = discount
- 
+
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=5, size_out=2)
 
         self.net = net
+
+        self.valuemem = []
+        self.statemem = []
 
     def update(self, input):
         reward = input[0]
         value = input[1]
         switch = input[2]
         state = input[3]
+        reset = input[4].astype(int)
 
         if state is None:
             return [0, value]  # no error without prediction
 
-        delta = reward if reward > 0 else self.discount*value - state
-        value = 0 if reward > 0 else value  # fix bleeding into novel episodes
+        (delta, value) = (reward - value, 0) if reward > .5 else (self.discount*value - state, value)
 
-        return [delta*switch, value]
+        self.valuemem.append(value)
+        self.statemem.append(state)
+
+        if reset:
+            return [delta*switch, 0]
+        else:
+            return [delta*switch, value]
 
 
 class DecisionNode:
@@ -188,9 +199,17 @@ class PlaceCells:
 
 
 class Switch:
-    def __init__(self, state=1):
+    def __init__(self, state=1, switch_off=False, switchtime=None):
         self.state = state
+        self.switchtime = switchtime
+        self.switch = switch_off
 
         with nengo.Network() as net:
-            net.switch = nengo.Node(lambda t: self.state, size_out=1)
+            net.switch = nengo.Node(self.switch_func , size_out=1)
         self.net = net
+
+    def switch_func(self, t):
+        if self.switch and t > self.switchtime:
+            self.state = 0
+        return self.state
+

@@ -48,6 +48,7 @@ class Maze:
                     reward  - 1 if target reached, 0 otherwise
                     done    - 1 if target or time limit reached 0 otherwise
                     time    - float
+                    reset   - 1 if environment was reset in current time step
         '''
         action = action.astype(int)[0]
 
@@ -56,7 +57,7 @@ class Maze:
         if self.done:  # check whether simulation has ended
             pn = self._get_random_start()
             self.reset(pn)  # random starting position
-            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
+            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time, 1])
             return returnarr
 
         direction = self.actions[action]
@@ -77,7 +78,7 @@ class Maze:
         doneval = 1 if self.done else 0
 
         # pack return in an array
-        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time])
+        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time, 0])
         return returnarr
 
     def reset(self, mousepos=np.array([0,1], dtype='float')):
@@ -98,3 +99,40 @@ class Maze:
         x = radius * np.cos(angle)
         y = radius * np.sin(angle)
         return np.array([x,y])
+
+
+class TestEnv:
+
+    def __init__(self):
+        self.stepsize = 0.0002  # with standard dt and track length 2 this
+                                # leads to episode length of 10 seconds
+        self.pathlen = 2
+        self.agentpos = 0
+        self.reward = 1
+        self.goalcounter = 0
+        self.reset = 500
+
+    def step(self):
+        reset = 0
+        self.agentpos += self.stepsize
+        if self.goalReached():
+            reward = self.reward
+            if self.goalcounter == self.reset:
+                self.agentpos = 0
+                self.goalcounter = 0
+            else:
+                self.goalcounter += 1
+                self.agentpos = self.pathlen
+
+                if self.goalcounter == self.reset:
+                    reset = 1
+        else:
+            reward = 0
+            reset = 0
+        return np.array([self.agentpos, reward, reset])
+
+    def goalReached(self):
+        return abs(self.agentpos - self.pathlen) < self.stepsize
+
+
+

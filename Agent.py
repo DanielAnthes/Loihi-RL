@@ -42,7 +42,6 @@ class Mouse:
         )
         # initialize neural net for critic
         self.Critic = CriticNet(
-            n_pc=n_place_cells,
             input_node=self.net.input,
             n_neuron_out=100,
             lr=crit_lr
