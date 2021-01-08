@@ -19,7 +19,7 @@ env = Maze()
 with nengo.Network() as model:
     agent = Mouse(env, N_PCX, N_PCY, act_lr=1e-6, crit_lr=1e-6)
 
-    envstate = nengo.Node(lambda time, action: env.step(action), size_in=1, size_out=5)
+    envstate = nengo.Node(lambda time, action: env.step(action), size_in=1, size_out=6)
 
     # add node to control learning
     model.switch = Switch(state=1)
@@ -41,6 +41,7 @@ with nengo.Network() as model:
     nengo.Connection(agent.Critic.net.output, agent.Error.net.errornode[1])
     nengo.Connection(model.switch.net.switch, agent.Error.net.errornode[2])
     nengo.Connection(agent.Error.net.errornode[1], agent.Error.net.errornode[3]) # recurrent connection to save last state; TODO: synapse=0 if transmission too bad
+    nengo.Connection(envstate[5], agent.Error.net.errornode[4]) # pass reset flag
     nengo.Connection(agent.Error.net.errornode[0], agent.Critic.net.conn.learning_rule)
     nengo.Connection(agent.Error.net.errornode[0], agent.Actor.net.conn.learning_rule)
 

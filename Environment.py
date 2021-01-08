@@ -48,6 +48,7 @@ class Maze:
                     reward  - 1 if target reached, 0 otherwise
                     done    - 1 if target or time limit reached 0 otherwise
                     time    - float
+                    reset   - 1 if environment was reset in current time step
         '''
         action = action.astype(int)[0]
 
