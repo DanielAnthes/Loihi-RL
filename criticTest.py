@@ -13,7 +13,7 @@ env = TestEnv(invert=True)
 BACKEND = 'CPU'
 dt = 0.001
 duration = 400
-discount = 0.9995
+discount = 0.9
 
 with nengo.Network() as net:
     envnode = nengo.Node(lambda t: env.step(), size_out=3)
