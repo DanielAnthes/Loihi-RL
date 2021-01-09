@@ -29,8 +29,8 @@ class Mouse:
         self.net = nengo.Network()
         self.net.input = nengo.Ensemble(
             n_neurons=n_place_cells,
-            dimensions=3,
-            radius=np.sqrt(3)
+            dimensions=2,
+            radius=env.diameter / 1.75
         )
 
         # initialize neural net for actor

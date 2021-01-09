@@ -1,23 +1,25 @@
 import numpy as np
 import nengo
 
+import util
+
 
 class Maze:
     '''
     Environment Class, interactions are defined by reset and step
     '''
-    def __init__(self):
+    def __init__(self, max_time=30, speed=0.3):
         # coordinates given in meters, (0,0) marks center of the maze
-        self.speed = 0.3  # m/s speed of the mouse
-        self.timestep = 0.001  # seconds, discrete time steps
+        self.speed = speed  # m/s speed of the mouse
+        self.timestep = 0.01  # seconds, discrete time steps
         self.diameter = 2  # meters, diameter of the maze TODO: if timesteps are small agent gets to make many choices -> wiggling ensues
         self.platformsize = 0.1 # meters, diameter of platform
         self.platform_loc = np.array([0,0], dtype='float')  # location of platform x,y coordinates in meters
         self.mousepos, self.mouserot = self._get_random_start()
-        self.maxrot = np.pi/2
+        self.maxrot = 2*np.pi
         self.done = False  # whether mouse has reached platform
         # self.actions = np.array([[0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1], [-1,0], [-1,1]], dtype='float') # mapping from action (index) to direction vector
-        self.max_time = 120  # maximum trial duration in seconds # originally 120 seconds
+        self.max_time = max_time  # maximum trial duration in seconds # originally 120 seconds
         self.time = 0
         self.actionmemory = list()
         self.deltamemory = list()
@@ -57,12 +59,12 @@ class Maze:
         self.actionmemory.append(action)
         if self.done:  # check whether simulation has ended
             self.reset()  # random starting position
-            returnarr = np.array([self.mousepos[0], self.mousepos[1], self.mouserot, 0, 0, self.time])
+            returnarr = np.array([self.mousepos[0], self.mousepos[1], 0, 0, self.time])
             return returnarr
 
         # direction = self.actions[action]
         len_step = self.speed * self.timestep
-        rot = self.mouserot + action * self.maxrot
+        rot = action# * self.maxrot
         delta_pos = len_step * np.array([np.cos(rot), np.sin(rot)])
         self.deltamemory.append(delta_pos)
         if not self._outOfBounds(self.mousepos + delta_pos): # if mouse would go out of bounds bounce back
@@ -81,7 +83,7 @@ class Maze:
         doneval = 1 if self.done else 0
 
         # pack return in an array
-        returnarr = np.array([self.mousepos[0], self.mousepos[1], self.mouserot, reward, doneval, self.time])
+        returnarr = np.array([self.mousepos[0], self.mousepos[1], reward, doneval, self.time])
         return returnarr
 
     def reset(self, start_cond=None, dtype='float'):
