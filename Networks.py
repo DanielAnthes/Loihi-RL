@@ -1,7 +1,10 @@
+from math import sqrt
 import nengo
 import numpy as np
 from numpy.random import choice, random
 import Learning
+
+from util import opt_angle
 
 class ActorNet:
     '''
@@ -21,13 +24,15 @@ class ActorNet:
             net.output = nengo.Ensemble(
                 n_neurons=n_neuron_out, 
                 dimensions=1, 
-                radius=np.sqrt(2), 
-                intercepts=[0] * n_neuron_out
+                radius= 1.2*np.pi, 
+                # intercepts=[0] * n_neuron_out
             )
+
             net.conn = nengo.Connection(input_node, net.output,
-                                        function=lambda x: [0],
-                                        solver=nengo.solvers.LstsqL2(weights=True),
-                                        learning_rule_type=Learning.TDL(learning_rate=lr))
+                                        function = opt_angle, synapse=0 )
+                                        # function=lambda x: [0],
+                                        # solver=nengo.solvers.LstsqL2(weights=True),
+                                        # learning_rule_type=Learning.TDL(learning_rate=lr))
         self.net = net
 
 
@@ -68,7 +73,7 @@ class DeterministicCritic:
         Parameters for the environment are HARDCODED (!)
         '''
         with nengo.Network() as net:
-            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=3, size_out=1)
+            net.output = nengo.Node(lambda t, x: self.computeCritic(x), size_in=2, size_out=1)
             net.conn = nengo.Connection(input_node, net.output)
         self.net = net
         self.diameter = 2
