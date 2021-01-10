@@ -1,9 +1,10 @@
 from math import sqrt
 import nengo
 import numpy as np
+import pandas as pd
 from numpy.random import choice, random
-import Learning
 
+import Learning
 from util import opt_angle
 
 class ActorNet:
@@ -106,23 +107,38 @@ class ErrorNode:
         self.discount = discount
 
         with nengo.Network() as net:
-            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=4, size_out=2)
+            net.errornode = nengo.Node(lambda t, input: self.update(input), size_in=5, size_out=2)
 
         self.net = net
+        self.valuemem = []
+        self.statemem = []
 
     def update(self, input):
         reward = input[0]
         value = input[1]
-        switch = input[2]
+        switch = (input[2].astype(float) + 0.5).astype(int)
         state = input[3]
+        reset = input[4].astype(int)
+
+        self.statemem.append(state)
 
         if state is None:
             return [0, value]  # no error without prediction
 
-        delta = reward - value if reward > 0 else self.discount*value - state
-        value = 0 if reward > 0 else value  # fix bleeding into novel episodes
+        if reward > 0:
+            delta = reward - value
+            value = 0
+        else:
+            sstate = np.mean(self.statemem[-min(len(self.statemem), 15):])
+            delta = self.discount*value - state
 
-        return [delta*switch, value]
+        self.valuemem.append(value)
+
+        delta = delta * switch
+        if reset:
+            return [delta, 0]
+        else:
+            return [delta, value]
 
 
 class DecisionNode:
@@ -231,9 +247,17 @@ class PlaceCells:
 
 
 class Switch:
-    def __init__(self, state=1):
+    def __init__(self, state=1, switch_off=False, switchtime=None):
         self.state = state
+        self.switchtime = switchtime
+        self.switch = switch_off
 
         with nengo.Network() as net:
-            net.switch = nengo.Node(lambda t: self.state, size_out=1)
+            net.switch = nengo.Node(self.switch_func, size_out=1)
         self.net = net
+    
+    def switch_func(self, t):
+        if self.switch and t > self.switchtime:
+            self.state = 0
+        return self.state
+
