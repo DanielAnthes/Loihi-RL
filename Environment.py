@@ -134,5 +134,59 @@ class TestEnv:
     def goalReached(self):
         return abs(self.agentpos - self.pathlen) < self.stepsize
 
+class TestEnvActor:
 
+    def __init__(self, dt, trial_length):
+        self.stepsize = .002
+        self.reward = 1
+        self.goalcounter = 0
+        self.reset = 500
+        self.pos = self._get_random_start()
+        self.goal = 0
+        self.goald = .1
+        self.diameter = 2
+        self.dt = dt
+        self.trial_length = trial_length
+        self.t = .0
 
+    def _get_random_start(self):
+        return np.random.choice(np.array([-.5, .5]), 1)[0]
+
+    def _goalReached(self):
+        return abs(self.pos) < abs(self.goal - self.goald / 2)
+
+    def step(self, action):
+        self.t += self.dt
+
+        action = action[0]
+        prob_left = 1 / (1 + np.exp(-action))
+        prob_right = 1 - prob_left
+        direction = np.random.choice(np.array([-1, 1]), 1, p=np.array([prob_left, prob_right]))[0]
+        dt_mov = direction * self.stepsize
+
+        if abs(self.pos + dt_mov) < (self.diameter / 2):
+            self.pos += dt_mov
+
+        reset = 0
+
+        if self._goalReached():
+            reward = self.reward
+            if self.goalcounter == self.reset:
+                self.pos = self._get_random_start()
+                self.t = 0
+                self.goalcounter = 0
+            else:
+                self.goalcounter += 1
+                self.pos = self.goal
+
+                if self.goalcounter == self.reset:
+                    reset = 1
+        else:
+            reward = 0
+
+        if reward is not self.reward and self.t > self.trial_length:
+            self.t = 0
+            reset = 0
+            self.pos = self._get_random_start()
+
+        return [self.pos, reward, reset]
