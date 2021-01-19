@@ -33,14 +33,13 @@ def plot_sim(sim, envprobe, errorprobe, switchprobe):
     a.vlines(t[np.where((reward==0) & (done==1))], 0, 1,
         colors="red", linestyles="dashed", zorder=3,
         transform=a.get_xaxis_transform(), label="done")
-    a.legend(loc="lower left")
+    a.legend()
 
     a = ax[2]
     a.plot(t, sim.data[switchprobe])
     a.set_title("Learning")
     a.set_ylim([0,1.5])
     a.set_xlabel("Time")
-    return fix
 
 def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     '''
@@ -48,27 +47,21 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     '''
     episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
     episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
+    colours = np.flip(np.linspace(0.0, max(sim.trange()), len(episode_indices)) / (max(sim.trange())*1.75))
 
     fig = plt.figure()
     ax = plt.gca()
 
     last_episode = 0
-    for episode in episode_indices:
-        if last_episode == episode:
-            continue
+    for episode, colour in zip(episode_indices, colours):
         vx = sim.data[envprobe][int(last_episode):int(episode),0]
         vy = sim.data[envprobe][int(last_episode):int(episode),1]
-        # vrot = sim.data[envprobe][int(last_episode),2]
-        ax.plot(vx, vy, '-', alpha=0.6, label="%d-%d" % (int(last_episode), int(episode)), color='black') # plot all points w labels
-
-        # r = 0.1
-        # dx = r * np.cos(vrot)
-        # dy = r * np.sin(vrot)
-        ax.plot(vx[0], vy[0], 'o', alpha=0.6)
-        # ax.arrow(vx[0], vy[0], dx, dy)
+        c = np.repeat(colour, 3)
+        ax.plot(vx, vy, '-', alpha=0.6, color=c, label="%d-%d" % (int(last_episode), int(episode))) # plot all points w labels
+        ax.plot(vx[0], vy[0], 'o', alpha=0.6, color=c)
         if timestamps is True:
-            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, fontsize=8) # plot start point beginning t in s
-        ax.plot(vx[-1], vy[-1], '*', alpha=0.6) # plot end point as x
+            ax.text(vx[0], vy[0], str(int(round(last_episode * env.timestep))), alpha=0.6, color=c, fontsize=8) # plot start point beginning t in s
+        ax.plot(vx[-1], vy[-1], '*', alpha=0.6, color=c) # plot end point as x
         last_episode = episode + 1
 
     arena = plt.Circle((0,0), 1, color='k', fill=False)
@@ -77,84 +70,17 @@ def plot_trajectories(sim, env, envprobe, labels=False, timestamps=True):
     ax.add_artist(arena)
     ax.axis('equal')
     if labels is True:
-        ax.legend(loc="lower left")
+        ax.legend()
     plt.xlim([-1.5, 1.5])
     plt.ylim([-1.5, 1.5])
     plt.title("Trajectory")
-    return fig
-
-
-def plot_movement_density_evolution(sim, env, envprobe):
-    '''
-    plots the density of movements over time
-    '''
-    episode_indices = np.where(sim.data[envprobe][:,2] == 1.0)
-    episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
-
-    last_episode = 0
-
-    episodes = np.array([])
-    d_mean = np.array([])
-    d_error = np.array([])
-
-    for episode in episode_indices:
-        pos = sim.data[envprobe][int(last_episode):int(episode),0:2]
-        centroid = np.sum(pos, axis=0) / pos.shape[0]
-        distances = np.sqrt((pos[:,0] - centroid[0])**2 + (pos[:,1] - centroid[1])**2)
-        dist_mean = np.sum(distances) / len(distances)
-        dist_error = np.sum((distances - dist_mean) ** 2) / len(distances)
-
-        episodes = np.append(episodes, episode)
-        d_mean = np.append(d_mean, dist_mean)
-        d_error = np.append(d_error, dist_error)
-
-        last_episode = episode
-
-    fig = plt.figure()
-    plt.errorbar(episodes, d_mean, d_error, linestyle='None', marker='^')
-    plt.title("Movement Density Evolution")
-    plt.xlabel("Epoch (t)")
-    plt.ylabel("Distance from centroid")
-    return fig
-
-def plot_ttf_evolution(sim, env, envprobe, RA=3, labels=False):
-    '''
-    plots time to finish evolution
-    '''
-    episode_indices = np.where(sim.data[envprobe][:,3] == 1.0)
-    episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
-
-    last_episode = 0
-
-    episodes = np.array([])
-
-    for episode in episode_indices:
-        episodes = np.append(episodes, episode - last_episode)
-        last_episode = episode
-
-    ra_s = np.repeat(episodes[0], RA)
-    ra_e = np.repeat(episodes[-1], RA)
-    ra = np.concatenate((episodes, ra_e))
-    ra = [np.mean(ra[i:i+RA]) * env.timestep for i in range(len(episodes))]
-
-    indices_ep = np.arange(len(episodes)) + 1
-
-    fig = plt.figure()
-    plt.scatter(indices_ep, episodes * env.timestep, marker='x', label="Consecutive episodes")
-    plt.plot(indices_ep, ra, 'r-', alpha=0.6, label="RA" + str(RA))
-    plt.xlabel("Epoch (Index)")
-    plt.ylabel("Length (t in s)")
-    plt.title("TTF evolution")
-    if labels is True:
-        plt.legend(loc="lower left")
-    return fig
 
 def plot_weight_evolution_3d(sim, weights_probe, title="3D Weight evolution (undefined)"):
     '''
     3d weight evolution plots
     use of weights.shape[1] > 1
     '''
-    weights = sim.data[weights_probe].squeeze()
+    weights = sim.data[weights_probe]
     conns = list(range(weights.shape[1]))
 
     fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
@@ -338,16 +264,27 @@ def plot_tuning_curves(model, ensemble):
     ax.set_zlabel("Firing rate (Hz)")
     plt.show()
 
+def optimise_gamma(step_size, diameter=2, gamma_lower=.9, gamma_upper=1.0, gamma_precision=10e3):
+    def F(g, t, T):
+        def k(g, t):
+            return .5 * (np.abs(g**(t-1) - g**t) + np.abs(g**(t+1) - g**t))
+        return (1 / (T - 2)) * np.sum(np.array([k(g, n) for n in t[1:-1]]))
+
+    L = diameter / 2
+    T = L / step_size
+    t = np.arange(T)
+
+    gammas = np.linspace(gamma_lower, gamma_upper, num=gamma_precision, endpoint=False)
+    fitness = np.array([F(gamma, t, T) for gamma in gammas])
+
+    return (gammas[np.argmax(fitness)], np.max(fitness))
+
+
 def simulate_with_backend(backend, model, duration, timestep):
-    sim = create_simulator(backend, model, timestep)
+    if backend == 'CPU':
+        sim = nengo.Simulator(model, dt=timestep)
 
-    with sim:
-        sim.run(duration)
-
-    return sim
-
-def create_simulator(backend:str, model:nengo.Network, timestep:float) -> nengo.Simulator:
-    if backend == 'GPU':
+    elif backend == 'GPU':
         import nengo_ocl
         import pyopencl as cl
         # set device to avoid being prompted every time
@@ -358,65 +295,9 @@ def create_simulator(backend:str, model:nengo.Network, timestep:float) -> nengo.
 
     elif backend == 'LOIHI':
         import nengo_loihi
-        sim = nengo_loihi.Simulator(model, dt=timestep, target='loihi')
+        sim = nengo_loihi.Simulator(model, dt=timestep)
 
-    else: # backend == 'CPU':
-        sim = nengo.Simulator(model, dt=timestep)
+    with sim:
+        sim.run(duration)
 
     return sim
-
-def plot_actionspread(env):
-    plt.figure()
-    plt.title("Incoming Actions")
-    plt.scatter(range(len(env.actionmemory)), env.actionmemory)
-
-    plt.figure()
-    plt.title("Delta pos")
-    d = np.array(env.deltamemory)
-    plt.plot(range(len(env.deltamemory)), d[:, 0], label="x-delta")
-    plt.plot(range(len(env.deltamemory)), d[:, 1], label="y-delta")
-    plt.legend(loc="lower left")
-
-def plot_actor_turn(sim:nengo.Simulator, actorprobe:nengo.Probe, envprobe:nengo.Probe, max_arrows=1000):
-    data = sim.data[actorprobe].squeeze()
-    pos = sim.data[envprobe][:,0:2].squeeze()
-    t = sim.trange()
-
-    fig = plt.figure()
-    # plt.plot(t, data, "o")
-    plt.title('Actor Output')
-    plt.plot([0],[0],"ko")
-    # dists = np.sqrt(np.sum(pos**2, axis=1))
-    dx = 0.1 * np.cos(data)
-    dy = 0.1 * np.sin(data)
-    total_points = len(dx)
-    stepsize = total_points // max_arrows
-    for i in range(0, total_points, stepsize):
-        x,y = pos[i,0], pos[i,1]
-        act = plt.arrow(x,y, dx[i], dy[i])
-        a = opt_angle([x,y])
-        if np.abs(a) > np.pi:
-            print("!!", a)
-        dxopt = 0.1 * np.cos(a)
-        dyopt = 0.1 * np.sin(a)
-        opt = plt.arrow(x,y, dxopt, dyopt, color="green")
-    
-    plt.legend([act, opt], ["Actor Output", "Optimal"], loc="upper left")
-
-    # ax = fig.add_subplot(111, projection='polar')
-    # c = ax.scatter(theta, r, c=colors, s=area, cmap='hsv', alpha=0.75)
-
-def opt_angle(in_):
-    x,y = in_[0:2]
-    # avoid 0 division
-    x += 1e-8
-    y += 1e-8
-    a = np.arctan(y/x)
-    # in quadrant III&II add pi
-    if (x < 0 and y < 0) or (x < 0 and y > 0):
-        a += np.pi
-    # in quadrant IV add 2pi
-    elif x > 0 and y < 0:
-        a += 2 * np.pi
-    
-    return a - np.pi
