@@ -10,7 +10,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 '''
 
 env = TestEnv(invert=True)
-BACKEND = 'CPU'
+BACKEND = 'LOIHI'
 dt = 0.001
 duration = 400
 discount = 0.9

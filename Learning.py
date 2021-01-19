@@ -21,7 +21,7 @@ try:
     from nengo_ocl.plan import Plan
     from nengo_ocl.utils import as_ascii, indent, nonelist, round_up
     GPU = True
-except ModuleNotFoundError:
+except:
     GPU = False
 from mako.template import Template
 
