@@ -1,7 +1,9 @@
 import nengo
+import nengo_loihi
 import numpy as np
 from numpy.random import choice, random
 import Learning
+nengo_loihi.set_defaults()
 
 class ActorNet:
     '''
@@ -31,7 +33,7 @@ class CriticNet:
     TODO: INSERT INSIGHTFUL DESCRIPTION HERE
     '''
 
-    def __init__(self, input_node, n_neuron_out, lr):
+    def __init__(self, input_node, n_neuron_out, lr, onchip=True):
         '''
         initialize critic net as a nengo network object
 
@@ -41,11 +43,13 @@ class CriticNet:
             n_neuron_out    -   number of neurons in Ensemble encoding output
         '''
         with nengo.Network() as net:
+            nengo_loihi.add_params(net)
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
             net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
             # TODO: PES changes Decoders of incoming node
             # TODO: Does this interfer with other learning due to shared input?
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
+            net.config[net.output].on_chip=onchip
         self.net = net
 
 

@@ -4,6 +4,8 @@ import nengo
 from Networks import CriticNet, ErrorNode, Switch
 from util import simulate_with_backend
 from Environment import TestEnv
+import nengo_loihi
+nengo_loihi.set_defaults()
 
 '''
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
@@ -16,6 +18,7 @@ duration = 400
 discount = 0.9
 
 with nengo.Network() as net:
+    nengo_loihi.add_params(net)
     envnode = nengo.Node(lambda t: env.step(), size_out=3)
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
@@ -23,6 +26,9 @@ with nengo.Network() as net:
     switch =  Switch(state=1, switch_off=False, switchtime=duration/2)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
+
+    # move ensembles to chip
+    net.config[in_ens].on_chip=True
 
 
     # error node connections
@@ -40,7 +46,7 @@ with nengo.Network() as net:
     envprobe = nengo.Probe(envnode)
     criticprobe = nengo.Probe(critic.net.output)
     errorprobe = nengo.Probe(error.net.errornode)
-    learnprobe = nengo.Probe(critic.net.conn)
+    # learnprobe = nengo.Probe(critic.net.conn)
     switchprobe = nengo.Probe(switch.net.switch)
 
 try:
