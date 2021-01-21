@@ -6,6 +6,7 @@ import nengo
 from Networks import CriticNet, ErrorNode, Switch
 from util import simulate_with_backend
 from Environment import TestEnv
+import pathlib
 import nengo_loihi
 nengo_loihi.set_defaults()
 
@@ -14,7 +15,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 '''
 
 env = TestEnv(invert=True)
-BACKEND = 'LOIHI'
+BACKEND = 'CPU'
 dt = 0.001
 duration = 400
 discount = 0.9
@@ -58,13 +59,27 @@ except Exception as e:
     sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
 
 
-import pandas as pd
+
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
 state = sim.data[envprobe][:,0]
 reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 learnswitch = sim.data[switchprobe]
+
+dump = pathlib.Path('./dumps/')
+dump.mkdir(exist_ok=True)
+
+np.savetxt(dump / "trange.csv", t, delimiter=",")
+np.savetxt(dump / "sim_error.csv", sim_error, delimiter=",")
+np.savetxt(dump / "state.csv", state, delimiter=",")
+np.savetxt(dump / "reward.csv", reward, delimiter=",")
+np.savetxt(dump / "criticout.csv", criticout, delimiter=",")
+np.savetxt(dump / "learnswitch.csv", learnswitch, delimiter=",")
+
+'''
+#  TODO: plot elsewhere; not on 'loihi'
+import pandas as pd
 
 fig = plt.figure(figsize=(12,10))
 plt.subplot(411)
@@ -94,3 +109,4 @@ plt.title("Critic Value Prediction")
 
 plt.tight_layout()
 fig.savefig("FigureCriticSim.png")
+'''
