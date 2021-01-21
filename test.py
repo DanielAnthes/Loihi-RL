@@ -1,8 +1,8 @@
+import matplotlib as mpl
+mpl.use('Agg')
 from Environment import TestEnv
 from Agent import Mouse
 from Networks import CriticNet, ErrorNode, Switch
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 import nengo
 import nxsdk
