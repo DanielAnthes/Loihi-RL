@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import nengo
@@ -43,11 +45,10 @@ with nengo.Network() as net:
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
 
     # Probes
-    envprobe = nengo.Probe(envnode)
-    criticprobe = nengo.Probe(critic.net.output)
-    errorprobe = nengo.Probe(error.net.errornode)
-    # learnprobe = nengo.Probe(critic.net.conn)
-    switchprobe = nengo.Probe(switch.net.switch)
+    envprobe = nengo.Probe(envnode, sample_every=dt)
+    criticprobe = nengo.Probe(critic.net.output, sample_every=dt)
+    errorprobe = nengo.Probe(error.net.errornode, sample_every=dt)
+    switchprobe = nengo.Probe(switch.net.switch, sample_every=dt)
 
 try:
     sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
@@ -63,15 +64,13 @@ sim_error = sim.data[errorprobe][:,0]
 state = sim.data[envprobe][:,0]
 reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
-conndata = sim.data[learnprobe]
 learnswitch = sim.data[switchprobe]
 
-plt.figure(figsize=(12,10))
+fig = plt.figure(figsize=(12,10))
 plt.subplot(411)
 plt.plot(t, state, label='position')
 plt.plot(t, reward, label='reward')
 plt.plot(t, criticout, label='value')
-plt.plot(t, conndata, label='delta')
 plt.legend()
 plt.subplot(412)
 plt.plot(t, sim_error, label='error')
@@ -94,4 +93,4 @@ plt.plot(t, criticout)
 plt.title("Critic Value Prediction")
 
 plt.tight_layout()
-plt.show()
+fig.savefig("FigureCriticSim.png")
