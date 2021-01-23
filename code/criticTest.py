@@ -77,36 +77,3 @@ np.savetxt(dump / "reward.csv", reward, delimiter=",")
 np.savetxt(dump / "criticout.csv", criticout, delimiter=",")
 np.savetxt(dump / "learnswitch.csv", learnswitch, delimiter=",")
 
-'''
-#  TODO: plot elsewhere; not on 'loihi'
-import pandas as pd
-
-fig = plt.figure(figsize=(12,10))
-plt.subplot(411)
-plt.plot(t, state, label='position')
-plt.plot(t, reward, label='reward')
-plt.plot(t, criticout, label='value')
-plt.legend()
-plt.subplot(412)
-plt.plot(t, sim_error, label='error')
-plt.plot(t, learnswitch, label='learning')
-plt.legend()
-
-plt.subplot(413)
-plt.title('error node inputs')
-plt.plot(t, reward, label='reward')
-# plt.plot(t, criticout, label='value')
-plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
-plt.plot(t, sim_error, label='error')
-# plt.plot(t, sim.data[errorprobe][:,1], label='state')
-plt.plot(t, pd.Series(error.statemem).rolling(5).mean(), label="state", alpha=.5)
-# plt.plot(t, sim.data[envprobe][:,2], label='reset')
-plt.legend()
-
-plt.subplot(414)
-plt.plot(t, criticout)
-plt.title("Critic Value Prediction")
-
-plt.tight_layout()
-fig.savefig("FigureCriticSim.png")
-'''
