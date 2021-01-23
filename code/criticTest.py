@@ -67,7 +67,7 @@ reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 learnswitch = sim.data[switchprobe]
 
-dump = pathlib.Path('./dumps/')
+dump = pathlib.Path('../dumps/')
 dump.mkdir(exist_ok=True)
 
 np.savetxt(dump / "trange.csv", t, delimiter=",")
