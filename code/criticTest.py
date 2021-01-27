@@ -14,7 +14,7 @@ nengo_loihi.set_defaults()
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
 '''
 
-env = TestEnv(invert=True)
+env = TestEnv(invert=False)
 BACKEND = 'LOIHI'
 dt = 0.001
 duration = 400
