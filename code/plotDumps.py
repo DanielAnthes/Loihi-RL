@@ -49,4 +49,4 @@ plt.title("Critic Value Prediction")
 plt.legend()
 
 plt.tight_layout()
-fig.savefig(output / "FigureCriticSim.png")
+fig.savefig(output / "{}CriticSim.png".format(BACKEND))

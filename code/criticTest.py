@@ -17,7 +17,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 env = TestEnv(invert=False)
 BACKEND = 'LOIHI'
 dt = 0.001
-duration = 400
+duration = 600
 discount = 0.9995
 
 with nengo.Network() as net:
@@ -26,7 +26,7 @@ with nengo.Network() as net:
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
     error =  ErrorNode(discount=discount)  # seems like a reasonable value to have a reward gradient over the entire episode
-    switch =  Switch(state=1, switch_off=False, switchtime=duration/2)  # needed for compatibility with error implementation
+    switch =  Switch(state=1, switch_off=True, switchtime=duration/1.5)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
 
