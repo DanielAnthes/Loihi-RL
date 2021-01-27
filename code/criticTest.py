@@ -17,7 +17,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 env = TestEnv(invert=False)
 BACKEND = 'LOIHI'
 dt = 0.001
-duration = 200
+duration = 400
 discount = 0.9995
 
 with nengo.Network() as net:
@@ -56,9 +56,8 @@ try:
 except Exception as e:
     print(e)
     print("WARNING: Falling back to CPU backend")
-    sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
-
-
+    BACKEND='CPU'  # Relevant for data dumping below 
+    sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
 
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
@@ -67,16 +66,13 @@ reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 learnswitch = sim.data[switchprobe]
 
-#plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
-#plt.plot(t, sim_error, label='error')
-
 dump = pathlib.Path('../dumps/')
 dump.mkdir(exist_ok=True)
 
-np.savetxt(dump / "trange.csv", t, delimiter=",")
-np.savetxt(dump / "sim_error.csv", sim_error, delimiter=",")
-np.savetxt(dump / "state.csv", state, delimiter=",")
-np.savetxt(dump / "reward.csv", reward, delimiter=",")
-np.savetxt(dump / "criticout.csv", criticout, delimiter=",")
-np.savetxt(dump / "learnswitch.csv", learnswitch, delimiter=",")
-
+np.savetxt(dump / "{}_trange.csv".format(BACKEND), t, delimiter=",")
+np.savetxt(dump / "{}_sim_error.csv".format(BACKEND), sim_error, delimiter=",")
+np.savetxt(dump / "{}_state.csv".format(BACKEND), state, delimiter=",")
+np.savetxt(dump / "{}_reward.csv".format(BACKEND), reward, delimiter=",")
+np.savetxt(dump / "{}_criticout.csv".format(BACKEND), criticout, delimiter=",")
+np.savetxt(dump / "{}_learnswitch.csv".format(BACKEND), learnswitch, delimiter=",")
+np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
