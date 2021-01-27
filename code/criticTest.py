@@ -17,8 +17,8 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 env = TestEnv(invert=False)
 BACKEND = 'LOIHI'
 dt = 0.001
-duration = 400
-discount = 0.9
+duration = 200
+discount = 0.9995
 
 with nengo.Network() as net:
     nengo_loihi.add_params(net)
@@ -66,6 +66,9 @@ state = sim.data[envprobe][:,0]
 reward = sim.data[envprobe][:,1]
 criticout = sim.data[criticprobe]
 learnswitch = sim.data[switchprobe]
+
+#plt.plot(t, pd.Series(error.valuemem).rolling(5).mean(), label="value", alpha=.5)
+#plt.plot(t, sim_error, label='error')
 
 dump = pathlib.Path('../dumps/')
 dump.mkdir(exist_ok=True)

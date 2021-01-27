@@ -110,7 +110,7 @@ class TestEnv:
         self.agentpos = 2 if self.invert else 0
         self.reward = 1
         self.goalcounter = 0
-        self.reset = 500
+        self.reset = 750
 
     def step(self):
         reset = 0
@@ -147,7 +147,7 @@ class TestEnv2D:
         self.mousepos = self._get_random_start()
         self.reward = 1
         self.goalcounter = 0
-        self.reset = 500
+        self.reset = 500  # ejw to reader: for 1D I raised this a bit
 
     def _get_random_start(self):
         '''
