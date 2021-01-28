@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import nengo
 from Networks import CriticNet, ErrorNode, Switch
-from util import simulate_with_backend
+from util import simulate_with_backend, plot_ttf_evolution
 from Environment import TestEnvActor
 import Learning
 
@@ -84,4 +84,6 @@ plt.scatter(t, p_delta_negative, s=1, marker='x', label="Negative Delta", alpha=
 #plt.scatter(t, p_delta_naught, s=1, marker='x', label="Naught Delta", alpha=0.6)
 #axes.set_ylim([-5e-2, 5e-2])
 plt.legend()
+
+plot_ttf_evolution(sim, env, envprobe)
 plt.show()

@@ -285,3 +285,35 @@ def simulate_with_backend(backend, model, duration, timestep):
         sim.run(duration)
 
     return sim
+
+def plot_ttf_evolution(sim, env, envprobe, RA=3, labels=False):
+    '''
+    plots time to finish evolution
+    '''
+    episode_indices = np.where(sim.data[envprobe][:,1] == 1.0)
+    episode_indices = np.append(episode_indices[0], max(sim.trange()) / env.timestep)
+
+    last_episode = 0
+
+    episodes = np.array([])
+
+    for episode in episode_indices:
+        episodes = np.append(episodes, episode - last_episode)
+        last_episode = episode
+
+    ra_s = np.repeat(episodes[0], RA)
+    ra_e = np.repeat(episodes[-1], RA)
+    ra = np.concatenate((episodes, ra_e))
+    ra = [np.mean(ra[i:i+RA]) * env.timestep for i in range(len(episodes))]
+
+    indices_ep = np.arange(len(episodes)) + 1
+
+    fig = plt.figure()
+    plt.scatter(indices_ep, episodes * env.timestep, marker='x', label="Consecutive episodes")
+    plt.plot(indices_ep, ra, 'r-', alpha=0.6, label="RA" + str(RA))
+    plt.xlabel("Epoch (Index)")
+    plt.ylabel("Length (t in s)")
+    plt.title("TTF evolution")
+    if labels is True:
+        plt.legend(loc="lower left")
+    return fig
