@@ -75,4 +75,7 @@ np.savetxt(dump / "{}_state.csv".format(BACKEND), state, delimiter=",")
 np.savetxt(dump / "{}_reward.csv".format(BACKEND), reward, delimiter=",")
 np.savetxt(dump / "{}_criticout.csv".format(BACKEND), criticout, delimiter=",")
 np.savetxt(dump / "{}_learnswitch.csv".format(BACKEND), learnswitch, delimiter=",")
-np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
+try:   
+    np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
+except:
+    print("Statemem not stored")
