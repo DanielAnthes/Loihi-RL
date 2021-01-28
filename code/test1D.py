@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pathlib
 import numpy as np
 import nengo
 from Networks import CriticNet, ErrorNode, Switch
@@ -12,7 +13,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 
 BACKEND = 'CPU'
 dt = 0.001
-duration = 800
+duration = 2 #800
 discount = 0.9995
 env = TestEnvActor(dt=dt, trial_length=40, reset=1000)
 
@@ -27,7 +28,6 @@ with nengo.Network() as net:
     nengo.Connection(envnode[0], in_ens)
     conn = nengo.Connection(in_ens, actor, function=lambda x: [0], solver=nengo.solvers.LstsqL2(weights=True), learning_rule_type=Learning.TDL(learning_rate=1e-8))
     nengo.Connection(actor, envnode)
-
 
     # error node connections
     # reward = input[0] value = input[1] switch = input[2] state = input[3] reset = input[4].astype(int)
@@ -46,6 +46,7 @@ with nengo.Network() as net:
     criticprobe = nengo.Probe(critic.net.output)#, sample_every=0.5)
     actorprobe = nengo.Probe(actor)#, sample_every=0.5)
     errorprobe = nengo.Probe(error.net.errornode)#, sample_every=0.5)
+    switchprobe = nengo.Probe(switch.net.switch)#, sample_every=0.5)
 
 try:
     sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
@@ -55,32 +56,57 @@ except Exception as e:
     sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
 
 
-t = sim.trange()
 #t = np.arange(np.floor(duration / 0.5))
-p_pos = sim.data[envprobe][:,0]
-p_reward = sim.data[envprobe][:,1]
-p_delta = sim.data[errorprobe][:,0]
-p_delta_positive = np.where(p_delta > 0, p_delta, 0)
-p_delta_negative = np.where(p_delta < 0, p_delta, 0)
-p_delta_naught = np.where(p_delta == .0, p_delta, 1.0)
-p_prediction = sim.data[criticprobe]
-p_activity = sim.data[actorprobe]
+t = sim.trange()
+sim_error = sim.data[errorprobe][:,0]
+state = sim.data[envprobe][:,0]
+reward = sim.data[envprobe][:,1]
+criticout = sim.data[criticprobe]
+learnswitch = sim.data[switchprobe]
+activity = sim.data[actorprobe]
+
+delta = sim.data[errorprobe][:,0]
+delta_positive = np.where(delta > 0, delta, 0)
+delta_negative = np.where(delta < 0, delta, 0)
+#delta_naught = np.where(p_delta == .0, p_delta, 1.0)
+
+
+dump = pathlib.Path('../dumps/')
+dump.mkdir(exist_ok=True)
+
+np.savetxt(dump / "{}_trange.csv".format(BACKEND), t, delimiter=",")
+np.savetxt(dump / "{}_sim_error.csv".format(BACKEND), sim_error, delimiter=",")
+np.savetxt(dump / "{}_state.csv".format(BACKEND), state, delimiter=",")
+np.savetxt(dump / "{}_reward.csv".format(BACKEND), reward, delimiter=",")
+np.savetxt(dump / "{}_criticout.csv".format(BACKEND), criticout, delimiter=",")
+np.savetxt(dump / "{}_learnswitch.csv".format(BACKEND), learnswitch, delimiter=",")
+
+np.savetxt(dump / "{}_delta.csv".format(BACKEND), delta, delimiter=",")
+np.savetxt(dump / "{}_delta_positive.csv".format(BACKEND), delta_positive, delimiter=",")
+np.savetxt(dump / "{}_delta_negative.csv".format(BACKEND), delta_negative, delimiter=",")
+np.savetxt(dump / "{}_activity.csv".format(BACKEND), activity, delimiter=",")
+
+try:   
+    np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
+except:
+    print("Statemem not stored")
 
 plt.figure()
 plt.subplot(311)
-plt.plot(t, p_pos, label="Position", alpha=0.6)
-plt.plot(t, p_delta, label="Delta", alpha=0.6)
-plt.plot(t, p_prediction, label="Critic", alpha=0.6)
-plt.plot(t, p_reward, label="Reward", alpha=0.6)
+plt.plot(t, state, label="Position", alpha=0.6)
+plt.plot(t, delta, label="Delta", alpha=0.6)
+plt.plot(t, criticout, label="Critic", alpha=0.6)
+plt.plot(t, reward, label="Reward", alpha=0.6)
 plt.legend()
 plt.subplot(312)
-plt.plot(t, p_prediction, label="Critic", alpha=0.6)
-plt.plot(t, p_activity, label="Actor", alpha=0.6)
+plt.plot(t, criticout, label="Critic", alpha=0.6)
+plt.plot(t, activity, label="Actor", alpha=0.6)
 plt.legend()
 plt.subplot(313)
+
 axes = plt.gca()
-plt.scatter(t, p_delta_positive, s=1, marker='x', label="Positive Delta", alpha=0.6)
-plt.scatter(t, p_delta_negative, s=1, marker='x', label="Negative Delta", alpha=0.6)
+plt.scatter(t, delta_positive, s=1, marker='x', label="Positive Delta", alpha=0.6)
+plt.scatter(t, delta_negative, s=1, marker='x', label="Negative Delta", alpha=0.6)
 #plt.scatter(t, p_delta_naught, s=1, marker='x', label="Naught Delta", alpha=0.6)
 #axes.set_ylim([-5e-2, 5e-2])
 plt.legend()
