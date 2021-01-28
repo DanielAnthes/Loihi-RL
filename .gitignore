@@ -2,6 +2,8 @@
 .vscode
 __pycache__
 .tool-versions
+*.png
+*.csv
 
 # No Vim swap files
 *.swp*
