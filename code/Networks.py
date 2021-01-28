@@ -73,8 +73,8 @@ class ErrorNode:
 
         self.net = net
 
-        self.valuemem = []
-        self.statemem = []
+        # self.valuemem = []
+        # self.statemem = []
 
     def update(self, input):
         reward = input[0]
@@ -88,8 +88,8 @@ class ErrorNode:
 
         (delta, value) = (reward - value, 0) if reward > .5 else (self.discount*value - state, value)
 
-        self.valuemem.append(value)
-        self.statemem.append(state)
+        # self.valuemem.append(value)
+        # self.statemem.append(state)
 
         if reset:
             return [delta*switch, 0]
