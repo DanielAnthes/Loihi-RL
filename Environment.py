@@ -136,11 +136,11 @@ class TestEnv:
 
 class TestEnvActor:
 
-    def __init__(self, dt, trial_length):
+    def __init__(self, dt, trial_length, reset):
         self.stepsize = .002
         self.reward = 1
         self.goalcounter = 0
-        self.reset = 500
+        self.reset = reset
         self.pos = self._get_random_start()
         self.goal = 0
         self.goald = .1

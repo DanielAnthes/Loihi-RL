@@ -20,6 +20,7 @@ class ActorNet:
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=8, radius=np.sqrt(8))
             net.conn = nengo.Connection(input_node, net.output,
+                                        synapse=0.01,
                                         function=lambda x: [0]*8,
                                         solver=nengo.solvers.LstsqL2(weights=True),
                                         learning_rule_type=Learning.TDL(learning_rate=lr))
@@ -42,7 +43,7 @@ class CriticNet:
         '''
         with nengo.Network() as net:
             net.output = nengo.Ensemble(n_neurons=n_neuron_out, dimensions=1)
-            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0])
+            net.conn = nengo.Connection(input_node, net.output, function=lambda x: [0], synapse=0.01)
             # TODO: PES changes Decoders of incoming node
             # TODO: Does this interfer with other learning due to shared input?
             net.conn.learning_rule_type = nengo.PES(learning_rate=lr)
@@ -212,4 +213,3 @@ class Switch:
         if self.switch and t > self.switchtime:
             self.state = 0
         return self.state
-

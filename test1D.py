@@ -12,9 +12,9 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 
 BACKEND = 'CPU'
 dt = 0.001
-duration = 200
+duration = 800
 discount = 0.9995
-env = TestEnvActor(dt=dt, trial_length=40)
+env = TestEnvActor(dt=dt, trial_length=40, reset=1000)
 
 with nengo.Network() as net:
     envnode = nengo.Node(lambda t, v: env.step(v), size_in=1, size_out=3)
@@ -31,11 +31,11 @@ with nengo.Network() as net:
 
     # error node connections
     # reward = input[0] value = input[1] switch = input[2] state = input[3] reset = input[4].astype(int)
-    nengo.Connection(envnode[1], error.net.errornode[0], synapse=0) # reward connection
-    nengo.Connection(critic.net.output, error.net.errornode[1], synapse=0) # value prediction
-    nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0) # learning switch
-    nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0) # feed value into next step
-    nengo.Connection(envnode[2], error.net.errornode[4], synapse=0) # propagate reset signal
+    nengo.Connection(envnode[1], error.net.errornode[0], synapse=0.01) # reward connection
+    nengo.Connection(critic.net.output, error.net.errornode[1], synapse=0.01) # value prediction
+    nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0.01) # learning switch
+    nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0.01) # feed value into next step
+    nengo.Connection(envnode[2], error.net.errornode[4], synapse=0.01) # propagate reset signal
 
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
@@ -68,20 +68,20 @@ p_activity = sim.data[actorprobe]
 
 plt.figure()
 plt.subplot(311)
-plt.plot(t, p_pos, label="Position")
-plt.plot(t, p_delta, label="Delta")
-plt.plot(t, p_prediction, label="Critic")
-plt.plot(t, p_reward, label="Reward")
+plt.plot(t, p_pos, label="Position", alpha=0.6)
+plt.plot(t, p_delta, label="Delta", alpha=0.6)
+plt.plot(t, p_prediction, label="Critic", alpha=0.6)
+plt.plot(t, p_reward, label="Reward", alpha=0.6)
 plt.legend()
 plt.subplot(312)
-plt.plot(t, p_prediction, label="Critic")
-plt.plot(t, p_activity, label="Actor")
+plt.plot(t, p_prediction, label="Critic", alpha=0.6)
+plt.plot(t, p_activity, label="Actor", alpha=0.6)
 plt.legend()
 plt.subplot(313)
 axes = plt.gca()
-plt.scatter(t, p_delta_positive, s=1, marker='x', label="Positive Delta")
-plt.scatter(t, p_delta_negative, s=1, marker='x', label="Negative Delta")
-plt.scatter(t, p_delta_naught, s=1, marker='x', label="Naught Delta")
-axes.set_ylim([-5e-2, 5e-2])
+plt.scatter(t, p_delta_positive, s=1, marker='x', label="Positive Delta", alpha=0.6)
+plt.scatter(t, p_delta_negative, s=1, marker='x', label="Negative Delta", alpha=0.6)
+#plt.scatter(t, p_delta_naught, s=1, marker='x', label="Naught Delta", alpha=0.6)
+#axes.set_ylim([-5e-2, 5e-2])
 plt.legend()
 plt.show()
