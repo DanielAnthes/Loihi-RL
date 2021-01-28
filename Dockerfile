@@ -4,11 +4,14 @@ RUN echo "install python" && \
 	apt-get -y update && \
 	apt-get -y install python3 && \
 	apt-get -y install curl && \
+	apt-get -y install git && \
+	apt-get -y install vim && \
 	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 	/usr/bin/python3 get-pip.py && \
 	rm get-pip.py && \
 	pip install jupyter nengo matplotlib nengo-loihi && \
-	mkdir /Notebooks
+	mkdir /Notebooks && \
+	echo "export PATH=/usr/bin:$PATH" >> ~/.bashrc
 	
 EXPOSE 8888
 WORKDIR /Notebooks
