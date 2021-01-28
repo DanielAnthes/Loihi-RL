@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import pathlib
 import numpy as np
 import nengo
-from Networks import CriticNet, ErrorNode, Switch
-from util import simulate_with_backend
-from Environment import TestEnvActor
-import Learning
+from .Networks import CriticNet, ErrorNode, Switch
+from .util import simulate_with_backend
+from .Environment import TestEnvActor
+from . import Learning
 
 '''
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
