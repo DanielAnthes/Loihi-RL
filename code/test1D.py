@@ -13,7 +13,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 
 BACKEND = 'CPU'
 dt = 0.001
-duration = 2 #800
+duration = 800
 discount = 0.9995
 env = TestEnvActor(dt=dt, trial_length=40, reset=1000)
 
