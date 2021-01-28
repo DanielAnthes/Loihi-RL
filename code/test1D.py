@@ -56,7 +56,8 @@ except Exception as e:
     sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
 
 
-#t = np.arange(np.floor(duration / 0.5))
+# Use 
+# t = np.arange(np.floor(duration / 0.5))
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
 state = sim.data[envprobe][:,0]
@@ -70,8 +71,7 @@ delta_positive = np.where(delta > 0, delta, 0)
 delta_negative = np.where(delta < 0, delta, 0)
 #delta_naught = np.where(p_delta == .0, p_delta, 1.0)
 
-
-dump = pathlib.Path('../dumps/')
+dump = pathlib.Path('../dumps-actor-critic/')
 dump.mkdir(exist_ok=True)
 
 np.savetxt(dump / "{}_trange.csv".format(BACKEND), t, delimiter=",")
@@ -80,34 +80,11 @@ np.savetxt(dump / "{}_state.csv".format(BACKEND), state, delimiter=",")
 np.savetxt(dump / "{}_reward.csv".format(BACKEND), reward, delimiter=",")
 np.savetxt(dump / "{}_criticout.csv".format(BACKEND), criticout, delimiter=",")
 np.savetxt(dump / "{}_learnswitch.csv".format(BACKEND), learnswitch, delimiter=",")
-
 np.savetxt(dump / "{}_delta.csv".format(BACKEND), delta, delimiter=",")
 np.savetxt(dump / "{}_delta_positive.csv".format(BACKEND), delta_positive, delimiter=",")
 np.savetxt(dump / "{}_delta_negative.csv".format(BACKEND), delta_negative, delimiter=",")
 np.savetxt(dump / "{}_activity.csv".format(BACKEND), activity, delimiter=",")
-
 try:   
     np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
 except:
     print("Statemem not stored")
-
-plt.figure()
-plt.subplot(311)
-plt.plot(t, state, label="Position", alpha=0.6)
-plt.plot(t, delta, label="Delta", alpha=0.6)
-plt.plot(t, criticout, label="Critic", alpha=0.6)
-plt.plot(t, reward, label="Reward", alpha=0.6)
-plt.legend()
-plt.subplot(312)
-plt.plot(t, criticout, label="Critic", alpha=0.6)
-plt.plot(t, activity, label="Actor", alpha=0.6)
-plt.legend()
-plt.subplot(313)
-
-axes = plt.gca()
-plt.scatter(t, delta_positive, s=1, marker='x', label="Positive Delta", alpha=0.6)
-plt.scatter(t, delta_negative, s=1, marker='x', label="Negative Delta", alpha=0.6)
-#plt.scatter(t, p_delta_naught, s=1, marker='x', label="Naught Delta", alpha=0.6)
-#axes.set_ylim([-5e-2, 5e-2])
-plt.legend()
-plt.show()
