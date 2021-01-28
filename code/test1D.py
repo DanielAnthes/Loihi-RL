@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pathlib
+import os
 import numpy as np
 import nengo
 from Networks import CriticNet, ErrorNode, Switch
@@ -71,7 +72,7 @@ delta_positive = np.where(delta > 0, delta, 0)
 delta_negative = np.where(delta < 0, delta, 0)
 #delta_naught = np.where(p_delta == .0, p_delta, 1.0)
 
-dump = pathlib.Path('../dumps-actor-critic/')
+dump = pathlib.Path(os.path.join(os.path.dirname(__file__), '../dumps-actor-critic/'))
 dump.mkdir(exist_ok=True)
 
 np.savetxt(dump / "{}_trange.csv".format(BACKEND), t, delimiter=",")

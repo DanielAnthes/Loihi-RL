@@ -1,14 +1,14 @@
 import pandas as pd
 import numpy as np
 import pathlib
+import os
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
 
 # Read in csv dumps
 # Use different folder for critic-only and for actor-critic
 #folder = '../dumps/'  # critic only
-folder = '../dumps-actor-critic/'
-dump = pathlib.Path(folder)
+dump = pathlib.Path(os.path.join(os.path.dirname(__file__), '../dumps-actor-critic/'))
 
 # From which back end was the data generated?
 BACKEND='CPU'
