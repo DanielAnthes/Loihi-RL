@@ -14,11 +14,11 @@ nengo_loihi.set_defaults()
 Note: if reward delay in combination with resetting leads to no learning try staying at goal for multiple steps before resetting
 '''
 
-env = TestEnv(invert=True)
+env = TestEnv(invert=False)
 BACKEND = 'LOIHI'
 dt = 0.001
-duration = 400
-discount = 0.9
+duration = 600
+discount = 0.9995
 
 with nengo.Network() as net:
     nengo_loihi.add_params(net)
@@ -26,7 +26,7 @@ with nengo.Network() as net:
     in_ens = nengo.Ensemble(n_neurons=1000, radius=2, dimensions=1)  # encodes position
     critic = CriticNet(in_ens, n_neuron_out=1000, lr=1e-5)
     error =  ErrorNode(discount=discount)  # seems like a reasonable value to have a reward gradient over the entire episode
-    switch =  Switch(state=1, switch_off=False, switchtime=duration/2)  # needed for compatibility with error implementation
+    switch =  Switch(state=1, switch_off=True, switchtime=duration/1.5)  # needed for compatibility with error implementation
 
     nengo.Connection(envnode[0], in_ens)
 
@@ -56,9 +56,8 @@ try:
 except Exception as e:
     print(e)
     print("WARNING: Falling back to CPU backend")
-    sim = simulate_with_backend('CPU', net, duration, dt) # use default dt
-
-
+    BACKEND='CPU'  # Relevant for data dumping below 
+    sim = simulate_with_backend(BACKEND, net, duration, dt) # use default dt
 
 t = sim.trange()
 sim_error = sim.data[errorprobe][:,0]
@@ -70,10 +69,10 @@ learnswitch = sim.data[switchprobe]
 dump = pathlib.Path('../dumps/')
 dump.mkdir(exist_ok=True)
 
-np.savetxt(dump / "trange.csv", t, delimiter=",")
-np.savetxt(dump / "sim_error.csv", sim_error, delimiter=",")
-np.savetxt(dump / "state.csv", state, delimiter=",")
-np.savetxt(dump / "reward.csv", reward, delimiter=",")
-np.savetxt(dump / "criticout.csv", criticout, delimiter=",")
-np.savetxt(dump / "learnswitch.csv", learnswitch, delimiter=",")
-
+np.savetxt(dump / "{}_trange.csv".format(BACKEND), t, delimiter=",")
+np.savetxt(dump / "{}_sim_error.csv".format(BACKEND), sim_error, delimiter=",")
+np.savetxt(dump / "{}_state.csv".format(BACKEND), state, delimiter=",")
+np.savetxt(dump / "{}_reward.csv".format(BACKEND), reward, delimiter=",")
+np.savetxt(dump / "{}_criticout.csv".format(BACKEND), criticout, delimiter=",")
+np.savetxt(dump / "{}_learnswitch.csv".format(BACKEND), learnswitch, delimiter=",")
+np.savetxt(dump / "{}_statemem.csv".format(BACKEND), error.statemem, delimiter=",")
