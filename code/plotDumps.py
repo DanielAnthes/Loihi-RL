@@ -4,7 +4,7 @@ import pathlib
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
 
-BACKEND='CPU'
+BACKEND='GPU'
 
 # Read in csv dumps
 dump = pathlib.Path('../dumps/')

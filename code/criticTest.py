@@ -15,7 +15,7 @@ Note: if reward delay in combination with resetting leads to no learning try sta
 '''
 
 env = TestEnv(invert=False)
-BACKEND = 'LOIHI'
+BACKEND = 'GPU'
 dt = 0.001
 duration = 600
 discount = 0.9995
@@ -36,11 +36,11 @@ with nengo.Network() as net:
 
     # error node connections
     # reward = input[0] value = input[1] switch = input[2] state = input[3] reset = input[4].astype(int)
-    nengo.Connection(envnode[1], error.net.errornode[0], synapse=0) # reward connection
-    nengo.Connection(critic.net.output, error.net.errornode[1], synapse=0) # value prediction
-    nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0) # learning switch
-    nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0) # feed value into next step
-    nengo.Connection(envnode[2], error.net.errornode[4], synapse=0) # propagate reset signal
+    nengo.Connection(envnode[1], error.net.errornode[0], synapse=0.01) # reward connection
+    nengo.Connection(critic.net.output, error.net.errornode[1], synapse=0.01) # value prediction
+    nengo.Connection(switch.net.switch, error.net.errornode[2], synapse=0.01) # learning switch
+    nengo.Connection(error.net.errornode[1], error.net.errornode[3], synapse=0.01) # feed value into next step
+    nengo.Connection(envnode[2], error.net.errornode[4], synapse=0.01) # propagate reset signal
 
     # error to critic
     nengo.Connection(error.net.errornode[0], critic.net.conn.learning_rule, transform=-1)
