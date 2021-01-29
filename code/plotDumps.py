@@ -60,8 +60,8 @@ plt.legend()
 plt.subplot(312)
 plt.title("Simulation error")
 axes = plt.gca()
-plt.plot(t, sim_error, label='error node probe', alpha=0.6)
-plt.plot(t, learnswitch, label='learning', alpha=0.6)
+plt.plot(t, sim_error, label='Error probe', alpha=0.6)
+plt.plot(t, learnswitch, label='Learning', alpha=0.6)
 try:
     # TODO what's the timescale on this? 
     plt.scatter(t, delta_positive, s=1, marker='x', label="Positive Delta", alpha=0.6)
@@ -78,7 +78,7 @@ plt.legend()
 plt.subplot(313)
 plt.plot(t, criticout, label='Critic', alpha=0.6)
 try:
-    plt.plot(t, activity, label='Critic', alpha=0.6)
+    plt.plot(t, activity, label='Actor', alpha=0.6)
     plt.title("Critic and Actor Value Prediction")
 except:
     print("Actor activity not stored")
